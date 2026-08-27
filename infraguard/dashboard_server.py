@@ -185,6 +185,23 @@ def _evaluate_policy(nemotron_result: dict, agent_role: str = "diagnostic") -> d
     }
 
 
+def _find_frontend_file(filename: str) -> Path | None:
+    """Locate a frontend asset across multiple candidate paths."""
+    candidates = [
+        FRONTEND_DIR / filename,
+        Path(__file__).resolve().parent / "frontend" / filename,
+        Path.cwd() / "infraguard" / "frontend" / filename,
+        Path.cwd() / "frontend" / filename,
+    ]
+    for c in candidates:
+        try:
+            if c.is_file():
+                return c
+        except Exception:
+            pass
+    return None
+
+
 class InfraGuardRequestHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(FRONTEND_DIR), **kwargs)
@@ -196,35 +213,37 @@ class InfraGuardRequestHandler(SimpleHTTPRequestHandler):
                 "status": "online",
                 "zero_trust": "enforced",
                 "policy_engine": "OPA",
-                "llm_engine": os.getenv("LLM_MODEL", "nvidia/nemotron-3.5-lightning:free"),
+                "llm_engine": os.getenv("LLM_MODEL", "nvidia/nemotron-3-super-120b-a12b:free"),
             })
             return
 
-        # Explicitly serve frontend files with accurate MIME types
-        target_file = None
+        # Explicitly serve frontend files with accurate MIME types and multi-path search
+        target_name = None
         content_type = "text/html; charset=utf-8"
         if parsed.path in ("/", "/index.html", ""):
-            target_file = FRONTEND_DIR / "index.html"
+            target_name = "index.html"
             content_type = "text/html; charset=utf-8"
         elif parsed.path == "/style.css":
-            target_file = FRONTEND_DIR / "style.css"
+            target_name = "style.css"
             content_type = "text/css; charset=utf-8"
         elif parsed.path == "/app.js":
-            target_file = FRONTEND_DIR / "app.js"
+            target_name = "app.js"
             content_type = "application/javascript; charset=utf-8"
 
-        if target_file and target_file.is_file():
-            try:
-                content = target_file.read_bytes()
-                self.send_response(200)
-                self.send_header("Content-Type", content_type)
-                self.send_header("Content-Length", str(len(content)))
-                self.send_header("Access-Control-Allow-Origin", "*")
-                self.end_headers()
-                self.wfile.write(content)
-                return
-            except Exception:
-                pass
+        if target_name:
+            target_file = _find_frontend_file(target_name)
+            if target_file and target_file.is_file():
+                try:
+                    content = target_file.read_bytes()
+                    self.send_response(200)
+                    self.send_header("Content-Type", content_type)
+                    self.send_header("Content-Length", str(len(content)))
+                    self.send_header("Access-Control-Allow-Origin", "*")
+                    self.end_headers()
+                    self.wfile.write(content)
+                    return
+                except Exception:
+                    pass
 
         return super().do_GET()
 

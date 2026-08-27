@@ -1,39 +1,38 @@
 /**
- * InfraGuard SRE Console — Live Nemotron Reasoning Frontend
- * 
- * Every prompt actually hits the backend which calls NVIDIA Nemotron / Gemini.
- * The UI displays the LLM's real chain-of-thought reasoning, its decided
- * action, and then ArmorIQ evaluates whether the action is within the
- * signed Merkle plan scope.
+ * InfraGuard SRE Control Surface — Client Controller
+ * 100% ID-Synchronized with index.html & style.css
  */
 
 document.addEventListener('DOMContentLoaded', () => {
   const promptInput = document.getElementById('promptInput');
   const btnExecutePrompt = document.getElementById('btnExecutePrompt');
   const btnRunMatrix = document.getElementById('btnRunMatrix');
-  const auditStream = document.getElementById('auditStream');
-  const auditEmpty = document.getElementById('auditEmpty');
-  const tokenChip = document.getElementById('tokenChip');
+  const streamContainer = document.getElementById('streamContainer');
+  const emptyState = document.getElementById('emptyState');
+  const tokenIdText = document.getElementById('tokenIdText');
+  const trustTokenBadge = document.getElementById('trustTokenBadge');
   const btnClearLogs = document.getElementById('btnClearLogs');
-  const policyVerdictBox = document.getElementById('policyVerdictBox');
+  const verdictCard = document.getElementById('verdictCard');
   const verdictBadge = document.getElementById('verdictBadge');
   const verdictTitle = document.getElementById('verdictTitle');
-  const verdictContent = document.getElementById('verdictContent');
-  const presetButtons = document.querySelectorAll('.btn-preset');
-  const rootTokenDisplay = document.getElementById('rootTokenDisplay');
+  const verdictBody = document.getElementById('verdictBody');
+  const chipButtons = document.querySelectorAll('.chip-btn');
 
   let currentLoadingEl = null;
 
-  presetButtons.forEach(btn => {
+  // Chip Presets
+  chipButtons.forEach(btn => {
     btn.addEventListener('click', () => {
-      presetButtons.forEach(b => b.classList.remove('active'));
+      chipButtons.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      runScenario(btn.getAttribute('data-scenario'));
+      const scenario = btn.getAttribute('data-scenario');
+      runScenario(scenario);
     });
   });
 
+  // Prompt dispatch
   btnExecutePrompt?.addEventListener('click', () => {
-    const text = promptInput.value.trim();
+    const text = promptInput?.value.trim();
     if (text) runCustomPrompt(text);
   });
 
@@ -48,12 +47,13 @@ document.addEventListener('DOMContentLoaded', () => {
   btnRunMatrix?.addEventListener('click', runSecurityMatrix);
 
   function clearFeed() {
-    auditStream.innerHTML = '';
-    if (auditEmpty) {
-      auditStream.appendChild(auditEmpty);
-      auditEmpty.style.display = 'flex';
+    if (!streamContainer) return;
+    streamContainer.innerHTML = '';
+    if (emptyState) {
+      streamContainer.appendChild(emptyState);
+      emptyState.style.display = 'flex';
     }
-    policyVerdictBox.style.display = 'none';
+    if (verdictCard) verdictCard.style.display = 'none';
   }
 
   function ts() {
@@ -61,9 +61,11 @@ document.addEventListener('DOMContentLoaded', () => {
     return d.toTimeString().split(' ')[0] + '.' + String(d.getMilliseconds()).padStart(3, '0');
   }
 
-  function showLoadingStep(message) {
-    if (auditEmpty) auditEmpty.style.display = 'none';
-    removeLoadingStep();
+  function showLoading(msg) {
+    if (!streamContainer) return;
+    if (emptyState) emptyState.style.display = 'none';
+    removeLoading();
+
     currentLoadingEl = document.createElement('div');
     currentLoadingEl.className = 'audit-step loading-step';
     currentLoadingEl.innerHTML = `
@@ -75,14 +77,14 @@ document.addEventListener('DOMContentLoaded', () => {
         <span class="step-timestamp">${ts()}</span>
       </div>
       <p class="step-narration" style="color: #818CF8;">
-        <span class="loading-pulse">&#9679;</span> ${message || 'Querying autonomous reasoning engine...'}
+        <span class="loading-pulse">&#9679;</span> ${msg || 'Querying autonomous reasoning engine...'}
       </p>
     `;
-    auditStream.appendChild(currentLoadingEl);
-    auditStream.scrollTop = auditStream.scrollHeight;
+    streamContainer.appendChild(currentLoadingEl);
+    streamContainer.scrollTop = streamContainer.scrollHeight;
   }
 
-  function removeLoadingStep() {
+  function removeLoading() {
     if (currentLoadingEl && currentLoadingEl.parentNode) {
       currentLoadingEl.parentNode.removeChild(currentLoadingEl);
       currentLoadingEl = null;
@@ -92,7 +94,8 @@ document.addEventListener('DOMContentLoaded', () => {
   function appendStep({ agent, role, narration, nemotron = null, toolCall = null, delay = 0 }) {
     return new Promise(resolve => {
       setTimeout(() => {
-        if (auditEmpty) auditEmpty.style.display = 'none';
+        if (!streamContainer) { resolve(); return; }
+        if (emptyState) emptyState.style.display = 'none';
 
         const el = document.createElement('div');
         el.className = 'audit-step';
@@ -123,8 +126,8 @@ document.addEventListener('DOMContentLoaded', () => {
           ${toolCall ? `<div class="tool-call-box">INVOKE &gt; ${escapeHtml(toolCall)}</div>` : ''}
         `;
 
-        auditStream.appendChild(el);
-        auditStream.scrollTop = auditStream.scrollHeight;
+        streamContainer.appendChild(el);
+        streamContainer.scrollTop = streamContainer.scrollHeight;
         resolve();
       }, delay);
     });
@@ -136,27 +139,29 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function setToken(id) {
-    if (tokenChip) tokenChip.textContent = `Token ID: #${id.slice(0, 8)}`;
-    if (rootTokenDisplay) rootTokenDisplay.textContent = `${id.slice(0, 16)}...`;
+    if (tokenIdText) tokenIdText.textContent = `Token: #${id.slice(0, 8)}`;
+    if (trustTokenBadge) trustTokenBadge.style.borderColor = 'rgba(255, 255, 255, 0.16)';
   }
 
   function showVerdict(policy) {
-    policyVerdictBox.style.display = 'block';
+    if (!verdictCard) return;
+    verdictCard.style.display = 'block';
+
     if (policy.blocked) {
-      policyVerdictBox.className = 'policy-verdict-box';
-      verdictBadge.textContent = policy.status || '403 FORBIDDEN';
-      verdictTitle.textContent = 'Zero-Trust Policy Intercept: Unauthorized Action Blocked';
-      verdictContent.innerHTML = `Rule: <code>${escapeHtml(policy.reason)}</code>`;
+      verdictCard.className = 'verdict-card';
+      if (verdictBadge) verdictBadge.textContent = policy.status || '403 FORBIDDEN';
+      if (verdictTitle) verdictTitle.textContent = 'Zero-Trust Policy Intercept: Unauthorized Action Blocked';
+      if (verdictBody) verdictBody.innerHTML = `Rule: <code>${escapeHtml(policy.reason)}</code>`;
     } else if (policy.status === 'no_action') {
-      policyVerdictBox.className = 'policy-verdict-box allowed';
-      verdictBadge.textContent = 'ANALYSIS ONLY';
-      verdictTitle.textContent = 'Nemotron Diagnostic Assessment Complete';
-      verdictContent.innerHTML = `<code>${escapeHtml(policy.reason)}</code>`;
+      verdictCard.className = 'verdict-card allowed';
+      if (verdictBadge) verdictBadge.textContent = 'ANALYSIS ONLY';
+      if (verdictTitle) verdictTitle.textContent = 'Nemotron Diagnostic Assessment Complete';
+      if (verdictBody) verdictBody.innerHTML = `<code>${escapeHtml(policy.reason)}</code>`;
     } else {
-      policyVerdictBox.className = 'policy-verdict-box allowed';
-      verdictBadge.textContent = policy.status || '200 OK';
-      verdictTitle.textContent = 'Cryptographic Intent Verified — Action Permitted';
-      verdictContent.innerHTML = `<code>${escapeHtml(policy.reason)}</code>`;
+      verdictCard.className = 'verdict-card allowed';
+      if (verdictBadge) verdictBadge.textContent = policy.status || '200 OK';
+      if (verdictTitle) verdictTitle.textContent = 'Cryptographic Intent Verified — Action Permitted';
+      if (verdictBody) verdictBody.innerHTML = `<code>${escapeHtml(policy.reason)}</code>`;
     }
   }
 
@@ -169,12 +174,12 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       return await resp.json();
     } catch (err) {
-      console.error('API error:', err);
+      console.warn('API error:', err);
       return null;
     }
   }
 
-  // ========= Custom Prompt — Real Nemotron Call =========
+  // ========= Custom Prompt Handler =========
   async function runCustomPrompt(text) {
     clearFeed();
     setToken(crypto.randomUUID().replace(/-/g, ''));
@@ -186,11 +191,10 @@ document.addEventListener('DOMContentLoaded', () => {
       delay: 100,
     });
 
-    showLoadingStep('NVIDIA Nemotron is analyzing system logs and telemetry in real time...');
+    showLoading('NVIDIA Nemotron is formulating autonomous reasoning in real time...');
 
-    // Actual backend call to Nemotron
     const data = await apiPost('/api/reason', { prompt: text, agent_role: 'diagnostic' });
-    removeLoadingStep();
+    removeLoading();
 
     if (!data || !data.nemotron) {
       await appendStep({
@@ -205,7 +209,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const nem = data.nemotron;
     const policy = data.policy || { blocked: false, status: '200 OK', reason: 'Verified' };
 
-    // Show Nemotron's real thinking
     await appendStep({
       agent: 'Nemotron Autonomous Reasoner',
       role: 'diagnostic',
@@ -218,24 +221,22 @@ document.addEventListener('DOMContentLoaded', () => {
       delay: 200,
     });
 
-    // If Nemotron decided on a tool call, show it
     if (nem.decided_mcp && nem.decided_action) {
       await appendStep({
         agent: 'Agent Tool Dispatch',
         role: 'diagnostic',
         narration: `Nemotron decided to invoke: ${nem.decided_mcp}.${nem.decided_action}`,
         toolCall: `${nem.decided_mcp}.${nem.decided_action}(${JSON.stringify(nem.decided_params)})`,
-        delay: 300,
+        delay: 250,
       });
 
-      // Show ArmorIQ policy evaluation
       await appendStep({
         agent: 'ArmorIQ Policy Evaluator',
         role: policy.blocked ? 'gateway' : 'diagnostic',
         narration: policy.blocked
           ? `BLOCKED: ${policy.reason}`
           : `ALLOWED: ${policy.reason}`,
-        delay: 300,
+        delay: 250,
       });
     } else {
       await appendStep({
@@ -256,7 +257,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const endpoint = `/api/simulate/${type}`;
 
     if (type === 'prompt-injection') {
-      promptInput.value = 'Analyze container logs for payments-api latency spike';
+      if (promptInput) promptInput.value = 'Analyze container logs for payments-api latency spike';
       setToken('c21494f23933404b');
 
       await appendStep({
@@ -281,7 +282,7 @@ document.addEventListener('DOMContentLoaded', () => {
         delay: 250,
       });
     } else if (type === 'parameter-tampering') {
-      promptInput.value = 'Remediate payments latency via staging container restart';
+      if (promptInput) promptInput.value = 'Remediate payments latency via staging container restart';
       setToken('f2d4694cfeca4c9e');
 
       await appendStep({
@@ -291,7 +292,7 @@ document.addEventListener('DOMContentLoaded', () => {
         delay: 100,
       });
     } else if (type === 'unauthorized-database') {
-      promptInput.value = 'Inspect database lock tables during diagnostic triage';
+      if (promptInput) promptInput.value = 'Inspect database lock tables during diagnostic triage';
       setToken('a8ec1a146bac4ba6');
 
       await appendStep({
@@ -302,11 +303,10 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    showLoadingStep('Nemotron is formulating autonomous reasoning and tool invocation...');
+    showLoading('Nemotron is formulating autonomous reasoning and tool invocation...');
 
-    // Call real backend
     const data = await apiPost(endpoint);
-    removeLoadingStep();
+    removeLoading();
 
     if (!data || !data.nemotron) {
       await appendStep({
@@ -321,7 +321,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const nem = data.nemotron;
     const policy = data.policy || { blocked: true, status: '403 Forbidden', reason: 'Policy Intercept' };
 
-    // Display Nemotron's actual reasoning
     await appendStep({
       agent: 'Nemotron Autonomous Reasoner',
       role: 'diagnostic',
@@ -379,9 +378,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let passed = 0;
 
     for (const scenario of scenarios) {
-      showLoadingStep(`Evaluating ${scenario.name} with live Nemotron engine...`);
+      showLoading(`Evaluating ${scenario.name} with live Nemotron engine...`);
       const data = await apiPost(scenario.endpoint);
-      removeLoadingStep();
+      removeLoading();
 
       const blocked = data?.policy?.blocked;
       if (blocked) passed++;
@@ -403,6 +402,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Auto-launch initial scenario so the screen immediately comes to life!
+  // Instant auto-run on page load
   runScenario('prompt-injection');
 });

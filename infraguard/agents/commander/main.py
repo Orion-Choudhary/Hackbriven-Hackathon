@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import logging
 from pathlib import Path
 from pprint import pprint
@@ -41,7 +42,15 @@ def run_local_demo() -> None:
     logger.info("Delegated remediation scope: %s", sorted(remediation_token.allowed_actions))
 
 
-def run_armoriq_flow(config_path: Path) -> None:
+def _dump_token(value: object) -> object:
+    if hasattr(value, "model_dump"):
+        return value.model_dump(mode="json")
+    if hasattr(value, "dict"):
+        return value.dict()
+    return value
+
+
+def run_armoriq_flow(config_path: Path, handoff_dir: Path | None = None) -> None:
     from armoriq_sdk import ArmorIQClient
     from armoriq_sdk.exceptions import (
         DelegationException,
@@ -74,18 +83,32 @@ def run_armoriq_flow(config_path: Path) -> None:
     commander_token = client.get_intent_token(capture, validity_seconds=300)
     logger.info("Intent token created: %s", getattr(commander_token, "token_id", "<unknown>"))
 
-    logger.info("Delegating to Diagnostic via delegate_subtree...")
-    diagnostic_delegation = client.delegate_subtree(
+    logger.info("Delegating Diagnostic log-read authority via delegate_subtree...")
+    diagnostic_logs_delegation = client.delegate_subtree(
         intent_token=commander_token,
         delegate_public_key="infraguard-diagnostic-key",
         subtree_path="/steps/[0]",
         validity_seconds=3600,
-        parent_plan=plan.to_sdk_plan(),
+        parent_plan=sdk_plan,
         target_agent="diagnostic",
     )
     logger.info(
-        "Diagnostic subtree delegation created. Trust ID: %s",
-        diagnostic_delegation.get("trust_id", "<unknown>"),
+        "Diagnostic logs subtree delegation created. Trust ID: %s",
+        diagnostic_logs_delegation.get("trust_id", "<unknown>"),
+    )
+
+    logger.info("Delegating Diagnostic metrics authority via delegate_subtree...")
+    diagnostic_metrics_delegation = client.delegate_subtree(
+        intent_token=commander_token,
+        delegate_public_key="infraguard-diagnostic-key",
+        subtree_path="/steps/[1]",
+        validity_seconds=3600,
+        parent_plan=sdk_plan,
+        target_agent="diagnostic",
+    )
+    logger.info(
+        "Diagnostic metrics subtree delegation created. Trust ID: %s",
+        diagnostic_metrics_delegation.get("trust_id", "<unknown>"),
     )
 
     logger.info("Delegating to Remediation via delegate_subtree...")
@@ -94,7 +117,7 @@ def run_armoriq_flow(config_path: Path) -> None:
         delegate_public_key="infraguard-remediation-key",
         subtree_path="/steps/[2]",
         validity_seconds=3600,
-        parent_plan=plan.to_sdk_plan(),
+        parent_plan=sdk_plan,
         target_agent="remediation",
     )
     logger.info(
@@ -106,7 +129,34 @@ def run_armoriq_flow(config_path: Path) -> None:
     logger.info("Diagnostic allowed: %s", sorted(DIAGNOSTIC_ACTIONS))
     logger.info("Remediation allowed: %s", sorted(REMEDIATION_ACTIONS))
 
-    diagnostic_token = diagnostic_delegation.get("delegated_token")
+    if handoff_dir:
+        handoff_dir.mkdir(parents=True, exist_ok=True)
+        diagnostic_payload = {
+            "tokens": {
+                "fetch_system_logs": _dump_token(
+                    diagnostic_logs_delegation.get("delegated_token")
+                ),
+                "query_metrics": _dump_token(
+                    diagnostic_metrics_delegation.get("delegated_token")
+                ),
+            }
+        }
+        remediation_payload = {
+            "delegated_token": _dump_token(
+                remediation_delegation.get("delegated_token")
+            )
+        }
+        (handoff_dir / "diagnostic-token.json").write_text(
+            json.dumps(diagnostic_payload, indent=2),
+            encoding="utf-8",
+        )
+        (handoff_dir / "remediation-token.json").write_text(
+            json.dumps(remediation_payload, indent=2),
+            encoding="utf-8",
+        )
+        logger.info("Wrote token handoff files to %s", handoff_dir)
+
+    diagnostic_token = diagnostic_logs_delegation.get("delegated_token")
     if diagnostic_token is None:
         logger.warning("Diagnostic delegated token not available; skipping invoke probe.")
         return
@@ -156,10 +206,15 @@ def main() -> None:
         action="store_true",
         help="Use ArmorIQ SDK v2 for capture_plan/get_intent_token/delegate.",
     )
+    parser.add_argument(
+        "--handoff-dir",
+        help="Write delegated-token JSON files for Diagnostic and Remediation agents.",
+    )
     args = parser.parse_args()
 
     if args.armoriq:
-        run_armoriq_flow(Path(args.config))
+        handoff_dir = Path(args.handoff_dir) if args.handoff_dir else None
+        run_armoriq_flow(Path(args.config), handoff_dir)
     else:
         run_local_demo()
 

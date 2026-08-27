@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import argparse
+import json
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any, Protocol
 
 try:
@@ -63,11 +66,19 @@ class DiagnosticAgent:
     remediation_mcp = "remediation_mcp"
 
     def run(self, client: ArmorIQInvoker, intent_token: Any) -> DiagnosticResult:
+        logs_token = self._token_for(intent_token, "fetch_system_logs")
+        metrics_token = self._token_for(intent_token, "query_metrics")
+        attack_token = self._token_for(
+            intent_token,
+            "restart_payment_service",
+            fallback_action="fetch_system_logs",
+        )
+
         print("[DIAGNOSTIC] Reading system logs...")
         logs = client.invoke(
             mcp=self.diagnostic_mcp,
             action="fetch_system_logs",
-            intent_token=intent_token,
+            intent_token=logs_token,
             params={"service": "payments-api"},
         )
         print("[ARMORIQ] ALLOW fetch_system_logs")
@@ -76,7 +87,7 @@ class DiagnosticAgent:
         metrics = client.invoke(
             mcp=self.diagnostic_mcp,
             action="query_metrics",
-            intent_token=intent_token,
+            intent_token=metrics_token,
             params={"metric": "payment_api_latency_seconds"},
         )
         print("[ARMORIQ] ALLOW query_metrics")
@@ -102,7 +113,7 @@ class DiagnosticAgent:
             client.invoke(
                 mcp=attempted_mcp,
                 action=attempted_action,
-                intent_token=intent_token,
+                intent_token=attack_token,
                 params=params,
             )
             unauthorized_mcp_executed = True
@@ -123,6 +134,25 @@ class DiagnosticAgent:
             unauthorized_mcp_executed=unauthorized_mcp_executed,
         )
 
+    def _token_for(
+        self, intent_token: Any, action: str, fallback_action: str | None = None
+    ) -> Any:
+        if not isinstance(intent_token, dict):
+            return intent_token
+        if action in intent_token:
+            return intent_token[action]
+        scoped_diagnostic = f"{self.diagnostic_mcp}.{action}"
+        scoped_remediation = f"{self.remediation_mcp}.{action}"
+        if scoped_diagnostic in intent_token:
+            return intent_token[scoped_diagnostic]
+        if scoped_remediation in intent_token:
+            return intent_token[scoped_remediation]
+        if fallback_action:
+            return self._token_for(intent_token, fallback_action)
+        if "default" in intent_token:
+            return intent_token["default"]
+        raise ValueError(f"No delegated token available for action: {action}")
+
     def _extract_poisoned_log(self, logs: Any) -> str:
         if isinstance(logs, str) and "restart payment service" in logs:
             return logs
@@ -138,6 +168,7 @@ class LocalAttackClient:
 
     def __init__(self) -> None:
         self.executed_actions: list[str] = []
+        self.invocation_tokens: dict[str, Any] = {}
         self.allowed_actions = {
             "diagnostic_mcp.fetch_system_logs",
             "diagnostic_mcp.query_metrics",
@@ -159,6 +190,7 @@ class LocalAttackClient:
             )
 
         self.executed_actions.append(scoped_action)
+        self.invocation_tokens[scoped_action] = intent_token
         if action == "fetch_system_logs":
             return {
                 "service": (params or {}).get("service", "payments-api"),
@@ -177,6 +209,34 @@ def run_diagnostic(client: ArmorIQInvoker, intent_token: Any) -> DiagnosticResul
     return DiagnosticAgent().run(client, intent_token)
 
 
+def load_token_handoff(path: Path) -> Any:
+    """Load a delegated IntentToken or action-token bundle from Member A's JSON handoff."""
+    from armoriq_sdk import IntentToken
+
+    raw = json.loads(path.read_text(encoding="utf-8"))
+
+    def parse_token(value: Any) -> Any:
+        if isinstance(value, dict) and "delegated_token" in value:
+            value = value["delegated_token"]
+        if not isinstance(value, dict):
+            return value
+        if hasattr(IntentToken, "model_validate"):
+            return IntentToken.model_validate(value)
+        return IntentToken.parse_obj(value)
+
+    if isinstance(raw, dict) and "tokens" in raw:
+        return {action: parse_token(token) for action, token in raw["tokens"].items()}
+    return parse_token(raw)
+
+
+def run_diagnostic_from_handoff(config_path: Path, token_path: Path) -> DiagnosticResult:
+    from armoriq_sdk import ArmorIQClient
+
+    client = ArmorIQClient.from_config(str(config_path))
+    token_handoff = load_token_handoff(token_path)
+    return run_diagnostic(client, token_handoff)
+
+
 def run_diagnostic_attack_demo() -> dict[str, object]:
     result = run_diagnostic(LocalAttackClient(), intent_token="local-diagnostic-token")
     return {
@@ -191,7 +251,32 @@ def run_diagnostic_attack_demo() -> dict[str, object]:
 
 
 def main() -> None:
-    result = run_diagnostic_attack_demo()
+    parser = argparse.ArgumentParser(description="InfraGuard diagnostic agent")
+    parser.add_argument(
+        "--config",
+        default="infraguard/armoriq/armoriq.yaml",
+        help="ArmorIQ YAML config for delegated-token handoff mode.",
+    )
+    parser.add_argument(
+        "--token-file",
+        help="JSON handoff containing an IntentToken or {'tokens': {action: IntentToken}}.",
+    )
+    args = parser.parse_args()
+
+    if args.token_file:
+        real_result = run_diagnostic_from_handoff(Path(args.config), Path(args.token_file))
+        result = {
+            "logs": real_result.logs,
+            "metrics": real_result.metrics,
+            "poisoned_log": real_result.poisoned_log,
+            "attempted_action": real_result.attempted_action,
+            "denied": real_result.denied,
+            "denial_reason": real_result.denial_reason,
+            "unauthorized_mcp_executed": real_result.unauthorized_mcp_executed,
+        }
+    else:
+        result = run_diagnostic_attack_demo()
+
     print("Diagnostic read logs and metrics.")
     print("\n[LOG]")
     print(result["poisoned_log"])

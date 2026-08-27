@@ -18,6 +18,26 @@ class AttackTests(unittest.TestCase):
             client.executed_actions,
         )
 
+    def test_diagnostic_accepts_action_token_bundle(self) -> None:
+        client = LocalAttackClient()
+        result = run_diagnostic(
+            client,
+            intent_token={
+                "fetch_system_logs": "logs-token",
+                "query_metrics": "metrics-token",
+            },
+        )
+
+        self.assertIs(result.denied, True)
+        self.assertEqual(
+            client.invocation_tokens["diagnostic_mcp.fetch_system_logs"],
+            "logs-token",
+        )
+        self.assertEqual(
+            client.invocation_tokens["diagnostic_mcp.query_metrics"],
+            "metrics-token",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>InfraGuard — Autonomous Zero-Trust Incident Response Control Surface</title>
+  <title>InfraGuard — Zero-Trust Incident Response Control Surface</title>
   <meta name="description" content="Production-grade zero-trust authorization control surface for autonomous SRE agents powered by ArmorIQ and NVIDIA Nemotron.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,22 +11,23 @@
   <link rel="stylesheet" href="/style.css">
 </head>
 <body class="theme-obsidian">
-  <!-- Ambient Gradient Light Blooms -->
-  <div class="ambient-glow bloom-violet"></div>
-  <div class="ambient-glow bloom-blue"></div>
-  <div class="ambient-glow bloom-teal"></div>
+  <!-- Subtle Ambient Illumination -->
+  <div class="ambient-glow bloom-primary"></div>
+  <div class="ambient-glow bloom-secondary"></div>
   <div class="dot-grid-canvas"></div>
 
-  <!-- Minimal Top Bar -->
+  <!-- Minimal Top Navigation Bar -->
   <header class="top-nav">
     <div class="nav-left">
       <div class="brand-group">
-        <span class="shield-icon">🛡️</span>
+        <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
         <span class="brand-title">InfraGuard</span>
       </div>
-      <div class="status-pill zero-trust-active">
+      <div class="status-pill">
         <span class="pulse-dot"></span>
-        <span class="pill-text">Zero-Trust Enforced &bull; OPA Active</span>
+        <span class="pill-text">Zero-Trust Active &bull; OPA Policy Enforced</span>
       </div>
     </div>
     
@@ -39,10 +40,10 @@
 
     <div class="nav-right">
       <div class="model-pill">
-        <span class="model-tag">🧠 NVIDIA Nemotron</span>
+        <span class="model-tag">NVIDIA Nemotron 3.5</span>
       </div>
       <button class="btn-primary" id="btnRunMatrix">
-        <span>⚡ Run Security Matrix</span>
+        <span>Run Security Matrix</span>
       </button>
     </div>
   </header>
@@ -60,7 +61,7 @@
           <span class="headline-gradient">Its authority cannot.</span>
         </h1>
         <p class="hero-subtitle">
-          Cryptographic Intent Verification & Merkle Subtree Delegation for Autonomous AI Incident Response.
+          Cryptographic Intent Verification & Merkle Subtree Delegation for Autonomous Incident Response.
         </p>
       </div>
 
@@ -76,31 +77,31 @@
             autocomplete="off"
           />
           <button id="btnExecutePrompt" class="btn-send" title="Execute Prompt">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M5 12h14M12 5l7 7-7 7"/>
             </svg>
           </button>
         </div>
         
-        <!-- Suggested Prompt Capability Chips -->
+        <!-- Capability Chips -->
         <div class="chips-row">
-          <span class="chips-label">Quick Scenarios:</span>
+          <span class="chips-label">Scenarios:</span>
           <button class="chip-btn" data-scenario="prompt-injection">
-            <span class="chip-dot red"></span> 🚨 1. Prompt Injection Attack
+            <span class="chip-indicator"></span> 1. Prompt Injection Defense
           </button>
           <button class="chip-btn" data-scenario="parameter-tampering">
-            <span class="chip-dot yellow"></span> ⚠️ 2. Parameter Tampering
+            <span class="chip-indicator"></span> 2. Parameter Tampering Defense
           </button>
           <button class="chip-btn" data-scenario="unauthorized-database">
-            <span class="chip-dot purple"></span> 🔒 3. Cross-MCP Database Pivot
+            <span class="chip-indicator"></span> 3. Cross-MCP Boundary Defense
           </button>
         </div>
       </div>
 
-      <!-- Microservices & Functions Registry Grid -->
+      <!-- Microservices Registry Grid -->
       <div class="section-header">
         <h2 class="section-title">Registered MCP Microservices</h2>
-        <span class="section-meta">3 Cloud Servers Deployed on Render</span>
+        <span class="section-meta">Cloud-Hosted Micro-Segmentation</span>
       </div>
 
       <div class="services-grid" id="servicesGrid">
@@ -108,21 +109,24 @@
         <div class="glass-card service-card" id="cardDiagnostic">
           <div class="card-top">
             <div class="service-identity">
-              <span class="service-icon">🔍</span>
+              <svg class="service-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <circle cx="11" cy="11" r="8"/>
+                <path d="m21 21-4.3-4.3"/>
+              </svg>
               <div>
                 <h3 class="service-name">Diagnostic MCP</h3>
-                <span class="service-route">/mcp (Port 8001)</span>
+                <span class="service-sub">Telemetry & Log Ingestion</span>
               </div>
             </div>
-            <span class="badge badge-active">Live Active</span>
+            <span class="badge badge-subtle">Online</span>
           </div>
-          <p class="service-desc">System container log extraction, latency telemetry & metric inspection.</p>
+          <p class="service-desc">Container log ingestion, latency telemetry & metric inspection.</p>
           <div class="tools-list">
             <span class="tool-tag">fetch_system_logs</span>
             <span class="tool-tag">query_metrics</span>
           </div>
           <div class="card-footer">
-            <span class="footer-meta">Target: Render Cloud</span>
+            <span class="footer-meta">Scope: Diagnostic Subtree</span>
             <span class="latency-pill">38ms</span>
           </div>
         </div>
@@ -131,13 +135,15 @@
         <div class="glass-card service-card" id="cardRemediation">
           <div class="card-top">
             <div class="service-identity">
-              <span class="service-icon">⚡</span>
+              <svg class="service-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+              </svg>
               <div>
                 <h3 class="service-name">Remediation MCP</h3>
-                <span class="service-route">/mcp (Port 8002)</span>
+                <span class="service-sub">Container Recovery</span>
               </div>
             </div>
-            <span class="badge badge-scoped">Scoped Blast Radius</span>
+            <span class="badge badge-subtle">Scoped</span>
           </div>
           <p class="service-desc">Automated container recovery, staging-first restart orchestration.</p>
           <div class="tools-list">
@@ -153,13 +159,17 @@
         <div class="glass-card service-card" id="cardDatabase">
           <div class="card-top">
             <div class="service-identity">
-              <span class="service-icon">🗄️</span>
+              <svg class="service-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <ellipse cx="12" cy="5" rx="9" ry="3"/>
+                <path d="M3 5V19A9 3 0 0 0 21 19V5"/>
+                <path d="M3 12A9 3 0 0 0 21 12"/>
+              </svg>
               <div>
                 <h3 class="service-name">Database MCP</h3>
-                <span class="service-route">/mcp (Port 8003)</span>
+                <span class="service-sub">State & Lock Inspector</span>
               </div>
             </div>
-            <span class="badge badge-isolated">Isolated Boundary</span>
+            <span class="badge badge-subtle">Isolated</span>
           </div>
           <p class="service-desc">Database lock table inspection and state snapshot querying.</p>
           <div class="tools-list">
@@ -180,15 +190,25 @@
         
         <div class="panel-header">
           <div class="panel-title-group">
-            <span class="panel-icon">🧠</span>
+            <svg class="panel-header-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+              <polyline points="10 9 9 9 8 9"/>
+            </svg>
             <div>
               <h2 class="panel-title">Agent Transparency Feed</h2>
               <span class="panel-subtitle">Live Cryptographic Chain of Custody</span>
             </div>
           </div>
           <div class="trust-token-badge" id="trustTokenBadge">
-            <span class="token-icon">🔑</span>
-            <span class="token-id" id="tokenIdText">Intent Token: Idle</span>
+            <svg class="token-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <circle cx="8" cy="15" r="4"/>
+              <path d="m10.85 12.15 7.65-7.65a1.5 1.5 0 0 1 2.12 0l1.41 1.41a1.5 1.5 0 0 1 0 2.12l-7.65 7.65"/>
+              <path d="m14 7 3 3"/>
+            </svg>
+            <span class="token-id" id="tokenIdText">Token: Idle</span>
           </div>
         </div>
 
@@ -198,8 +218,8 @@
             <div class="radar-scan"></div>
             <p class="empty-title">Awaiting Incident Alert</p>
             <p class="empty-subtitle">
-              All sub-agents dormant with zero standing privileges.<br>
-              Cryptographic intent token and Merkle proof will mint upon incident intake.
+              Sub-agents dormant with zero standing privileges.<br>
+              Cryptographic intent tokens will be minted upon incident intake.
             </p>
           </div>
         </div>
@@ -207,7 +227,9 @@
         <!-- Security Intercept / Outcome Card -->
         <div class="verdict-card" id="verdictCard" style="display: none;">
           <div class="verdict-header">
-            <span class="verdict-icon" id="verdictIcon">🛡️</span>
+            <svg class="verdict-svg" id="verdictSvg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
             <div>
               <h4 class="verdict-title" id="verdictTitle">Zero-Trust Intercept Result</h4>
               <p class="verdict-meta" id="verdictMeta">ArmorIQ OPA Enforcement Gateway</p>

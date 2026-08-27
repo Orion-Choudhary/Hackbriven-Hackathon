@@ -1,0 +1,5 @@
+armoriq-sdk
+mcp
+uvicorn
+pytest
+PyYAML

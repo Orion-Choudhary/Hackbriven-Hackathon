@@ -1,8 +1,9 @@
 from armoriq_sdk import ArmorIQClient
+import os
 
 
 client = ArmorIQClient(
-    api_key="ak_live_988c5037688dfe0020c90ce45bed336b304173112b6f46c58071abd0083f79bc",
+    api_key=os.environ["ARMORIQ_API_KEY"],
     user_id="Test-services",
     agent_id="Test",
     backend_endpoint="https://api.armoriq.ai",

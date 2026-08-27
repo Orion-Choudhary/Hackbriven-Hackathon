@@ -1,7 +1,10 @@
 from armoriq_sdk import ArmorIQClient
+from pathlib import Path
 
 
-client = ArmorIQClient.from_config("armoriq-test.yaml")
+CONFIG = Path(__file__).with_name("armoriq-test.yaml")
+
+client = ArmorIQClient.from_config(str(CONFIG))
 
 
 # 1. Define the authorized plan

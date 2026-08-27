@@ -1,6 +1,6 @@
 version: v1
 identity:
-  api_key: ARMORIQ_API_KEY
+  api_key: ""
   user_id: Test-services
   agent_id: Test
 environment: sandbox

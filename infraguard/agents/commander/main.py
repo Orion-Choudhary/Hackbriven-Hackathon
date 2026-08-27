@@ -80,7 +80,7 @@ def run_armoriq_flow(config_path: Path) -> None:
         delegate_public_key="infraguard-diagnostic-key",
         subtree_path="/steps/[0]",
         validity_seconds=3600,
-        parent_plan=plan.to_sdk_plan(),
+        parent_plan=sdk_plan,
         target_agent="diagnostic",
     )
     logger.info(
@@ -94,7 +94,7 @@ def run_armoriq_flow(config_path: Path) -> None:
         delegate_public_key="infraguard-remediation-key",
         subtree_path="/steps/[2]",
         validity_seconds=3600,
-        parent_plan=plan.to_sdk_plan(),
+        parent_plan=sdk_plan,
         target_agent="remediation",
     )
     logger.info(

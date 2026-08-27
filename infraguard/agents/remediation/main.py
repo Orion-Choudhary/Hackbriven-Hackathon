@@ -39,8 +39,10 @@ class RemediationAgent:
     ) -> RemediationResult:
         from infraguard.llm import remediation_decide_action
 
-        mcp, action, params = remediation_decide_action(summary)
-        print(f"[REMEDIATION] LLM formulated safe action: {mcp}.{action} ({params})")
+        mcp, action, params, reasoning, metadata = remediation_decide_action(summary)
+        print(f"[REMEDIATION:LLM] Model: {metadata.get('model', 'N/A')} (latency: {metadata.get('latency_seconds', '0.0')}s)")
+        print(f"[REMEDIATION:LLM] Reasoning: {reasoning}")
+        print(f"[REMEDIATION] Formulated safe action: {mcp}.{action} ({params})")
         result = client.invoke(
             mcp=mcp,
             action=action,

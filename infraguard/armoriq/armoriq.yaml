@@ -14,13 +14,13 @@ proxy:
 
 mcp_servers:
   - id: diagnostic_mcp
-    url: https://YOUR-DIAGNOSTIC-HOST/mcp
+    url: https://infraguard-diagnostic-mcp.onrender.com/mcp
     auth: none
   - id: remediation_mcp
-    url: https://YOUR-REMEDIATION-HOST/mcp
+    url: https://infraguard-remediation-mcp.onrender.com/mcp
     auth: none
   - id: database_mcp
-    url: https://YOUR-DATABASE-HOST/mcp
+    url: https://infraguard-database-mcp.onrender.com/mcp
     auth: none
 
 policy:

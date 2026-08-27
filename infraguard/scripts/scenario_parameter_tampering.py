@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Scenario 2: Parameter Tampering & Scope Violation Defense.
+"""Scenario 2: Parameter Tampering & Scope Violation Defense with NVIDIA Nemotron.
 
 Demonstrates:
-1. Remediation agent is granted an Intent Token specifically for restarting in STAGING (force=False).
-2. An attacker or hallucinating LLM modifies the invocation payload to target PRODUCTION (force=True).
-3. ArmorIQ OPA policy engine detects the parameter constraint violation and BLOCKS the call.
-4. When invoked with the legitimate approved parameters (staging), the call succeeds (200 OK).
+1. Remediation agent uses NVIDIA Nemotron to formulate a safe staging remediation plan.
+2. Remediation agent is granted an Intent Token specifically for restarting in STAGING (force=False).
+3. An attacker / adversary modifies the invocation payload to target PRODUCTION (force=True).
+4. ArmorIQ OPA policy engine detects the parameter constraint violation and BLOCKS the call (403 Forbidden).
+5. When invoked with the legitimate approved parameters (staging), the call succeeds (200 OK).
 """
 from __future__ import annotations
 
@@ -29,7 +30,7 @@ for env_path in [Path(".env"), Path("infraguard/.env"), Path(__file__).resolve()
             if line and not line.startswith("#") and "=" in line:
                 k, v = line.split("=", 1)
                 k, v = k.strip(), v.strip().strip("'\"")
-                if k and k not in os.environ:
+                if k and v:
                     os.environ[k] = v
         break
 
@@ -50,25 +51,32 @@ def main() -> int:
         IntentMismatchException,
         MCPInvocationException,
     )
+    from infraguard.llm import remediation_decide_action
 
     client = ArmorIQClient.from_config(str(CONFIG_PATH))
 
+    print("1. Formulating safe recovery plan with NVIDIA Nemotron LLM...")
+    summary = "Diagnostic confirmed payment latency is elevated due to worker lockup."
+    mcp, action, safe_params, reasoning, metadata = remediation_decide_action(summary)
+    print(f"   🧠 Model: {metadata.get('model', 'N/A')} (latency: {metadata.get('latency_seconds', '0.0')}s)")
+    print(f"   💬 Nemotron Chain of Thought:\n      {reasoning}")
+    print(f"   🎯 Approved Tool & Parameters: {mcp}.{action}({safe_params})")
+
     plan = {
         "steps": [
-            {"mcp": "remediation_mcp", "action": "restart_payment_service", "params": {"environment": "staging", "force": False}},
+            {"mcp": mcp, "action": action, "params": safe_params},
         ]
     }
 
-    print("1. Capturing approved staging remediation plan...")
+    print("\n2. Capturing approved staging plan & delegating to Remediation Agent...")
     capture = client.capture_plan(
-        llm="infraguard-demo",
+        llm=metadata.get("model", "infraguard-demo"),
         prompt="Restart staging payment service safely without force.",
         plan=plan,
         metadata={"scenario": "parameter-tampering-defense"},
     )
     commander_token = client.get_intent_token(capture, validity_seconds=300)
 
-    print("2. Delegating Remediation subtree to Remediation Agent...")
     remed_delegation = client.delegate_subtree(
         intent_token=commander_token,
         delegate_public_key="infraguard-remediation-key",

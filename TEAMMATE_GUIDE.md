@@ -1,18 +1,19 @@
-# 👥 InfraGuard Teammate Onboarding & Testing Guide
+# 👥 InfraGuard Teammate Onboarding & Testing Guide (NVIDIA Nemotron Edition)
 
 Welcome to the **InfraGuard** test suite! This guide provides step-by-step instructions for running the live zero-trust security demonstrations on your local machine (Windows, macOS, or Linux).
 
-> **Note**: You **do NOT need to run Docker or spin up local servers**. The 3 MCP servers (`diagnostic_mcp`, `remediation_mcp`, `database_mcp`) are already deployed 24/7 in the cloud on Render. Your local machine runs the orchestrator client that communicates with ArmorIQ Cloud and the live Render containers.
+> **Note**: You **do NOT need Docker or local servers**. The 3 MCP microservices (`diagnostic_mcp`, `remediation_mcp`, `database_mcp`) are hosted 24/7 on Render. Your local machine runs the autonomous agent orchestrator powered by **NVIDIA Nemotron** via OpenRouter.
 
 ---
 
 ## ⚡ 5-Minute Setup
 
-### Step 1: Clone Repository & Select Branch
+### Step 1: Clone Repository & Pull Latest
 ```bash
 git clone https://github.com/Orion-Choudhary/Hackk.git
 cd Hackk
 git checkout main
+git pull origin main
 ```
 
 ---
@@ -24,9 +25,9 @@ git checkout main
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 ```
-*(Or with Conda: `conda create -n InfraGuard python=3.11 -y; conda activate InfraGuard`)*
+*(Or with Conda: `conda activate InfraGuard`)*
 
-#### On macOS / Linux (bash/zsh):
+#### On macOS / Linux:
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
@@ -43,22 +44,22 @@ pip install -r infraguard/requirements.txt
 
 ### Step 4: Configure Environment Variables
 
-Create a file named `.env` in the root of the project (or copy `.env.example`):
+Create a file named `.env` in the root of the project:
 
 ```ini
-# ArmorIQ Cloud Endpoints & API Key
+# ArmorIQ Cloud Configuration
 ARMORIQ_API_KEY=ak_live_ca3f2a70374112c3a927fbdcffb28f4e6b9c8bb71cc979bfa2488d3691af7a59
 BACKEND_ENDPOINT=https://api.armoriq.ai
 IAP_ENDPOINT=https://iap.armoriq.ai
 PROXY_ENDPOINT=https://proxy.armoriq.ai
 
-# Optional: LLM Configuration for Autonomous Reasoning
-# OPENROUTER_API_KEY=sk-or-v1-...
-# LLM_MODEL=nvidia/nemotron-3.5-lightning:free
+# OpenRouter Configuration (NVIDIA Nemotron 3.5 Lightning Free)
+OPENROUTER_API_KEY=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
+LLM_MODEL=nvidia/nemotron-3.5-lightning:free
+LLM_BASE_URL=https://openrouter.ai/api/v1
 ```
 
-Also, set the `ARMORIQ_API_KEY` in your active terminal session:
-
+Set the `ARMORIQ_API_KEY` in your active shell:
 - **Windows PowerShell**:
   ```powershell
   $env:ARMORIQ_API_KEY="ak_live_ca3f2a70374112c3a927fbdcffb28f4e6b9c8bb71cc979bfa2488d3691af7a59"
@@ -67,38 +68,23 @@ Also, set the `ARMORIQ_API_KEY` in your active terminal session:
   ```bash
   export ARMORIQ_API_KEY="ak_live_ca3f2a70374112c3a927fbdcffb28f4e6b9c8bb71cc979bfa2488d3691af7a59"
   ```
-- **Windows Command Prompt (cmd.exe)**:
-  ```cmd
-  set ARMORIQ_API_KEY=ak_live_ca3f2a70374112c3a927fbdcffb28f4e6b9c8bb71cc979bfa2488d3691af7a59
-  ```
 
 ---
 
 ### Step 5: One-Time ArmorIQ Sync & Registration
 
-Run this command once to sync your machine's config with ArmorIQ Cloud:
+Sync your config with ArmorIQ Cloud:
 
 ```bash
 armoriq register --config infraguard/armoriq/armoriq.yaml
 ```
 
-**Expected Output:**
-```text
-Registering with ArmorIQ control plane...
-✓ Agent infraguard-commander registered
-✓ MCP server diagnostic_mcp registered (2 tools)
-✓ MCP server remediation_mcp registered (1 tools)
-✓ MCP server database_mcp registered (1 tools)
-✓ Policy applied (4 allowed, 0 denied)
-✓ Proxy endpoint: https://proxy.armoriq.ai
-```
-
 ---
 
-## 🧪 How to Run the Demonstrations
+## 🧪 How to Run the Security Demonstrations
 
-### 1. 🏆 Run the Master Security Showcase (Recommended for Demos)
-Executes all 3 live attack scenarios sequentially against the cloud MCP servers:
+### 1. 🏆 Master Security Showcase Matrix (Recommended for Judges)
+Runs all 3 live attack scenarios sequentially with NVIDIA Nemotron reasoning outputs and prints a benchmark table:
 
 ```bash
 python infraguard/scripts/run_full_security_showcase.py
@@ -106,85 +92,44 @@ python infraguard/scripts/run_full_security_showcase.py
 
 **Expected Results Table:**
 ```text
-===========================================================================
- 📊 INFRAGUARD ATTACK MITIGATION & ZERO-TRUST RESULTS
-===========================================================================
+==============================================================================
+ 📊 INFRAGUARD ATTACK MITIGATION & ZERO-TRUST RESULTS (NVIDIA NEMOTRON)
+==============================================================================
 Scenario Name                                 | Security Outcome        | Latency
----------------------------------------------------------------------------
-Scenario 1: Prompt Injection Defense          | PASSED (BLOCKED ATTACK) | ~7s
-Scenario 2: Parameter Tampering Defense       | PASSED (BLOCKED ATTACK) | ~5s
-Scenario 3: Cross-MCP Boundary Defense        | PASSED (BLOCKED ATTACK) | ~4s
-===========================================================================
+------------------------------------------------------------------------------
+Scenario 1: Prompt Injection Defense          | PASSED (BLOCKED ATTACK) | ~4s
+Scenario 2: Parameter Tampering Defense       | PASSED (BLOCKED ATTACK) | ~3s
+Scenario 3: Cross-MCP Boundary Defense        | PASSED (BLOCKED ATTACK) | ~3s
+==============================================================================
 ```
 
 ---
 
-### 2. Run the Autonomous Multi-Agent Orchestrator
-Demonstrates the full incident response lifecycle with live cryptographic subtree delegation:
+### 2. Run Individual Attack Scenarios
 
-```bash
-python -m infraguard.agents.commander.main --armoriq
-```
-
-**What Happens:**
-1. Commander captures the plan (`FinSecure payment latency alert`).
-2. Mints a Root Intent Token.
-3. Delegates subtree `/steps/[0]` to Diagnostic Agent (`Trust ID created`).
-4. Delegates subtree `/steps/[2]` to Remediation Agent (`Trust ID created`).
-5. Executes authorized Diagnostic `fetch_system_logs` against Render MCP ➔ `HTTP 200 OK`.
-6. Simulates prompt injection where Diagnostic tries to restart ➔ `HTTP 403 Forbidden (Blocked)`.
-
----
-
-### 3. Run Individual Attack Scenarios
-
-#### Scenario 1: Indirect Prompt Injection Defense
+#### Scenario 1: Indirect Prompt Injection Defense (Nemotron LLM)
 ```bash
 python infraguard/scripts/scenario_prompt_injection.py
 ```
-*Simulates a poisoned log file tricking the Diagnostic Agent into restarting a service.*
+*Shows live Render container logs being parsed by Nemotron. The poisoned log tricks the LLM into requesting a forced production restart, which ArmorIQ instantly blocks with `403 Forbidden`.*
 
-#### Scenario 2: Parameter Tampering & Scope Violation
+#### Scenario 2: Parameter Tampering & Scope Violation (Nemotron LLM)
 ```bash
 python infraguard/scripts/scenario_parameter_tampering.py
 ```
-*Simulates modifying payload parameters from `staging (force=False)` to `production (force=True)`.*
+*Shows Nemotron formulating a safe staging recovery action, an adversary tampering with the payload to force-kill production, and ArmorIQ blocking the parameter violation.*
 
-#### Scenario 3: Cross-MCP Boundary & Data Exfiltration
+#### Scenario 3: Cross-MCP Boundary & Data Exfiltration (Nemotron LLM)
 ```bash
 python infraguard/scripts/scenario_unauthorized_database.py
 ```
-*Simulates an agent pivoting across server boundaries to inspect database locks without authority.*
+*Shows an agent attempting to pivot across MCP server boundaries to inspect database locks without authority, and ArmorIQ blocking cross-tenant access.*
 
 ---
 
-### 4. Run the Unit Test Suite
-Runs the full local regression and mock authorization tests:
-
+### 3. Run Autonomous Commander Multi-Agent Lifecycle
 ```bash
-pytest infraguard/tests -v
-```
-
----
-
-## ❓ Troubleshooting & FAQs
-
-### Q1: `ModuleNotFoundError: No module named 'armoriq_sdk'`
-**Fix**: Ensure your virtual environment is active (`.venv\Scripts\Activate.ps1` or `source .venv/bin/activate`) and run:
-```bash
-pip install -r infraguard/requirements.txt
-```
-
-### Q2: `Error: API key is empty. Set ARMORIQ_API_KEY`
-**Fix**: You need to set the environment variable in your current terminal session:
-```powershell
-$env:ARMORIQ_API_KEY="ak_live_ca3f2a70374112c3a927fbdcffb28f4e6b9c8bb71cc979bfa2488d3691af7a59"
-```
-
-### Q3: `MCPInvocationException: Session not found`
-**Fix**: Run `armoriq register` once to refresh the MCP handshake with the cloud containers:
-```bash
-armoriq register --config infraguard/armoriq/armoriq.yaml
+python -m infraguard.agents.commander.main --armoriq
 ```
 
 ---

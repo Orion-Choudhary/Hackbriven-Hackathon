@@ -87,7 +87,7 @@ def _call_openai_compatible(
         payload["tool_choice"] = "auto"
 
     start_time = time.time()
-    with httpx.Client(timeout=30.0) as client:
+    with httpx.Client(timeout=4.0) as client:
         resp = client.post(f"{base_url}/chat/completions", json=payload, headers=headers)
         elapsed = time.time() - start_time
         if resp.status_code == 200:

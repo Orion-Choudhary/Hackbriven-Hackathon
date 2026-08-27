@@ -1,7 +1,7 @@
 version: v1
 
 identity:
-  api_key: ""
+  api_key: ${ARMORIQ_API_KEY}
   user_id: infraguard-commander-service
   agent_id: infraguard-commander
 

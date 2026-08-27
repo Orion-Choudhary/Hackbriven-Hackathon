@@ -334,18 +334,21 @@ class InfraGuardRequestHandler(SimpleHTTPRequestHandler):
         pass
 
 
-def run_server(port: int = 5000):
-    server_address = ("127.0.0.1", port)
+def run_server(port: int | None = None):
+    if port is None:
+        port = int(os.environ.get("PORT", sys.argv[1] if len(sys.argv) > 1 else 5000))
+    server_address = ("0.0.0.0", port)
+    ThreadingHTTPServer.allow_reuse_address = True
     try:
         httpd = ThreadingHTTPServer(server_address, InfraGuardRequestHandler)
     except OSError:
-        port = 5050
-        server_address = ("127.0.0.1", port)
+        port = int(os.environ.get("PORT", 5050))
+        server_address = ("0.0.0.0", port)
         httpd = ThreadingHTTPServer(server_address, InfraGuardRequestHandler)
-    print(f"InfraGuard Dashboard listening on http://localhost:{port}")
+    print(f"InfraGuard Dashboard listening on http://0.0.0.0:{port}")
     httpd.serve_forever()
 
 
 if __name__ == "__main__":
-    port = int(sys.argv[1]) if len(sys.argv) > 1 else 5000
-    run_server(port)
+    port_arg = int(sys.argv[1]) if len(sys.argv) > 1 else None
+    run_server(port_arg)

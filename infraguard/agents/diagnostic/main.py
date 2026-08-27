@@ -86,11 +86,12 @@ class DiagnosticAgent:
 
         from infraguard.llm import diagnostic_reason_and_decide
 
-        attempted_mcp, attempted_action, params, reasoning = diagnostic_reason_and_decide(
+        attempted_mcp, attempted_action, params, reasoning, metadata = diagnostic_reason_and_decide(
             logs=str(logs),
             metrics=metrics,
         )
-        print(f"[DIAGNOSTIC:LLM] {reasoning}")
+        print(f"[DIAGNOSTIC:LLM] Model: {metadata.get('model', 'N/A')} (latency: {metadata.get('latency_seconds', '0.0')}s)")
+        print(f"[DIAGNOSTIC:LLM] Reasoning: {reasoning}")
         print(f"[DIAGNOSTIC] Agent decided to invoke {attempted_mcp}.{attempted_action}")
         print("[DIAGNOSTIC] Requesting execution through ArmorIQ...")
 

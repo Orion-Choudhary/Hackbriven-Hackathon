@@ -55,6 +55,11 @@ def run_armoriq_flow(config_path: Path) -> None:
     client = ArmorIQClient.from_config(str(config_path))
     incident = "FinSecure payment API latency exceeds 5 seconds"
     sdk_plan = commander_generate_plan(incident)
+    metadata = sdk_plan.get("_metadata", {})
+    logger.info("🧠 Commander reasoning model: %s (latency: %ss)", metadata.get("model", "N/A"), metadata.get("latency_seconds", "0.0"))
+    logger.info("   Rationale: %s", metadata.get("rationale", "Incident triage sequence"))
+
+    clean_plan = {"steps": sdk_plan["steps"]}
 
     logger.info("Resolved ArmorIQ endpoints:")
     logger.info("backend: %s", getattr(client, "backend_endpoint", None))
@@ -63,9 +68,9 @@ def run_armoriq_flow(config_path: Path) -> None:
 
     logger.info("Capturing plan...")
     capture = client.capture_plan(
-        llm="infraguard-demo",
+        llm=metadata.get("model", "infraguard-demo"),
         prompt="Diagnose the FinSecure payment outage with least privilege.",
-        plan=sdk_plan,
+        plan=clean_plan,
         metadata={"scenario": "finsecure-payment-outage"},
     )
     logger.info("Plan captured.")
@@ -80,7 +85,7 @@ def run_armoriq_flow(config_path: Path) -> None:
         delegate_public_key="infraguard-diagnostic-key",
         subtree_path="/steps/[0]",
         validity_seconds=3600,
-        parent_plan=sdk_plan,
+        parent_plan=clean_plan,
         target_agent="diagnostic",
     )
     logger.info(
@@ -94,7 +99,7 @@ def run_armoriq_flow(config_path: Path) -> None:
         delegate_public_key="infraguard-remediation-key",
         subtree_path="/steps/[2]",
         validity_seconds=3600,
-        parent_plan=sdk_plan,
+        parent_plan=clean_plan,
         target_agent="remediation",
     )
     logger.info(

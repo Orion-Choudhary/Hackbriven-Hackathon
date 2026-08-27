@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+import argparse
+import os
+
 from mcp.server.mcpserver import MCPServer
+from mcp.server.transport_security import TransportSecuritySettings
 
 
 mcp = MCPServer("InfraGuard Database MCP")
@@ -9,6 +13,7 @@ mcp = MCPServer("InfraGuard Database MCP")
 @mcp.tool()
 def read_lock_snapshot(database: str = "payments") -> dict[str, object]:
     """Return a read-only lock contention snapshot."""
+    print(f"[MCP] read_lock_snapshot EXECUTED database={database}", flush=True)
     return {
         "database": database,
         "blocked_sessions": 17,
@@ -16,10 +21,6 @@ def read_lock_snapshot(database: str = "payments") -> dict[str, object]:
         "write_action_available": False,
     }
 
-
-import argparse
-import os
-from mcp.server.transport_security import TransportSecuritySettings
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="InfraGuard Database MCP")

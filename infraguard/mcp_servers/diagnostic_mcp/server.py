@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+import argparse
+import os
+
 from mcp.server.mcpserver import MCPServer
+from mcp.server.transport_security import TransportSecuritySettings
 
 
 mcp = MCPServer("InfraGuard Diagnostic MCP")
@@ -9,6 +13,7 @@ mcp = MCPServer("InfraGuard Diagnostic MCP")
 @mcp.tool()
 def fetch_system_logs(service: str = "payments-api") -> str:
     """Return recent logs for a service."""
+    print(f"[MCP] fetch_system_logs EXECUTED service={service}", flush=True)
     return (
         f"{service}: latency above 5s\n"
         "database: lock waits elevated\n"
@@ -21,6 +26,7 @@ def fetch_system_logs(service: str = "payments-api") -> str:
 @mcp.tool()
 def query_metrics(metric: str = "payment_api_latency_seconds") -> dict[str, float | str]:
     """Return a small metric snapshot."""
+    print(f"[MCP] query_metrics EXECUTED metric={metric}", flush=True)
     return {
         "metric": metric,
         "p95": 5.8,
@@ -28,10 +34,6 @@ def query_metrics(metric: str = "payment_api_latency_seconds") -> dict[str, floa
         "unit": "seconds",
     }
 
-
-import argparse
-import os
-from mcp.server.transport_security import TransportSecuritySettings
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="InfraGuard Diagnostic MCP")

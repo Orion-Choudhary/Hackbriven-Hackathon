@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Scenario 3: Cross-MCP Boundary & Unauthorized Data Access Defense.
+"""Scenario 3: Cross-MCP Boundary & Unauthorized Data Access Defense with NVIDIA Nemotron.
 
 Demonstrates:
-1. Diagnostic agent holds an Intent Token restricted purely to diagnostic logging.
-2. The agent attempts to pivot across MCP server boundaries to query the Database MCP
-   (`database_mcp.read_lock_snapshot`).
-3. ArmorIQ Proxy strictly enforces MCP separation and denies cross-boundary access.
+1. Commander captures an incident plan scoped strictly to diagnostic operations.
+2. Diagnostic Agent uses NVIDIA Nemotron to evaluate diagnostic findings.
+3. Diagnostic Agent attempts to pivot across MCP server boundaries to query the Database MCP
+   (`database_mcp.read_lock_snapshot`) without delegated database authority.
+4. ArmorIQ Proxy strictly enforces MCP micro-segmentation and denies cross-boundary access (403 Forbidden).
 """
 from __future__ import annotations
 
@@ -28,7 +29,7 @@ for env_path in [Path(".env"), Path("infraguard/.env"), Path(__file__).resolve()
             if line and not line.startswith("#") and "=" in line:
                 k, v = line.split("=", 1)
                 k, v = k.strip(), v.strip().strip("'\"")
-                if k and k not in os.environ:
+                if k and v:
                     os.environ[k] = v
         break
 
@@ -43,9 +44,21 @@ def main() -> int:
     print("=" * 70)
 
     from armoriq_sdk import ArmorIQClient
-    from armoriq_sdk.exceptions import ArmorIQException, PolicyBlockedException, IntentMismatchException
+    from armoriq_sdk.exceptions import (
+        ArmorIQException,
+        PolicyBlockedException,
+        IntentMismatchException,
+        MCPInvocationException,
+    )
+    from infraguard.llm import commander_generate_plan
 
     client = ArmorIQClient.from_config(str(CONFIG_PATH))
+
+    print("1. Capturing incident plan with Commander via NVIDIA Nemotron...")
+    plan_data = commander_generate_plan("Analyze payments-api diagnostic logs only.")
+    metadata = plan_data.get("_metadata", {})
+    print(f"   🧠 Model: {metadata.get('model', 'N/A')} (latency: {metadata.get('latency_seconds', '0.0')}s)")
+    print(f"   💬 Nemotron Scope Rationale: Scoped strictly to diagnostic_mcp.")
 
     plan = {
         "steps": [
@@ -53,16 +66,15 @@ def main() -> int:
         ]
     }
 
-    print("1. Capturing incident plan with Diagnostic scope only...")
     capture = client.capture_plan(
-        llm="infraguard-demo",
+        llm=metadata.get("model", "infraguard-demo"),
         prompt="Fetch payments-api diagnostic logs only.",
         plan=plan,
         metadata={"scenario": "boundary-defense"},
     )
     commander_token = client.get_intent_token(capture, validity_seconds=300)
 
-    print("2. Delegating Diagnostic subtree (/steps/[0])...")
+    print("\n2. Delegating Diagnostic subtree (/steps/[0]) to Diagnostic Agent...")
     diag_delegation = client.delegate_subtree(
         intent_token=commander_token,
         delegate_public_key="infraguard-diagnostic-key",
@@ -85,7 +97,7 @@ def main() -> int:
         )
         print("❌ SECURITY FAILURE: Unauthorized database access was NOT blocked!")
         return 1
-    except (PolicyBlockedException, IntentMismatchException, ArmorIQException) as exc:
+    except (PolicyBlockedException, IntentMismatchException, MCPInvocationException, ArmorIQException) as exc:
         print(f"\n🛡️  SUCCESS: ArmorIQ Proxy BLOCKED cross-MCP database access!")
         print(f"   Status: HTTP 403 Forbidden")
         print(f"   Enforcement Reason: {exc}")

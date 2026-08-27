@@ -1,17 +1,36 @@
 version: v1
+
 identity:
-  api_key: ""
+  api_key: ${ARMORIQ_API_KEY}
   user_id: infraguard-commander-service
   agent_id: infraguard-commander
-environment: sandbox
+
+environment: production
+
 proxy:
   url: https://proxy.armoriq.ai
   timeout: 30
   max_retries: 3
-mcp_servers: []
+
+mcp_servers:
+  - id: diagnostic_mcp
+    url: https://infraguard-diagnostic-mcp.onrender.com/mcp
+    auth: none
+  - id: remediation_mcp
+    url: https://infraguard-remediation-mcp.onrender.com/mcp
+    auth: none
+  - id: database_mcp
+    url: https://infraguard-database-mcp.onrender.com/mcp
+    auth: none
+
 policy:
-  allow: []
+  allow:
+    - diagnostic_mcp.fetch_system_logs
+    - diagnostic_mcp.query_metrics
+    - remediation_mcp.restart_payment_service
+    - database_mcp.read_lock_snapshot
   deny: []
+
 intent:
   ttl_seconds: 300
   require_csrg: true

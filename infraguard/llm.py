@@ -18,11 +18,8 @@ logger = logging.getLogger("infraguard.llm")
 
 # Primary model requested by user, with reliable fast fallbacks on OpenRouter free tier
 DEFAULT_MODELS = [
-    "nvidia/nemotron-3.5-lightning:free",
-    "google/gemma-4-31b-it:free",
-    "google/gemma-4-26b-a4b-it:free",
     "nvidia/nemotron-3-super-120b-a12b:free",
-    "minimax/minimax-m2.7:free",
+    "nvidia/nemotron-3.5-lightning:free",
 ]
 
 
@@ -50,14 +47,8 @@ def _get_api_key() -> tuple[str, str]:
     _load_env_file()
     if os.getenv("OPENROUTER_API_KEY"):
         return "openrouter", os.environ["OPENROUTER_API_KEY"]
-    if os.getenv("OPENAI_API_KEY"):
-        return "openai", os.environ["OPENAI_API_KEY"]
-    if os.getenv("GROQ_API_KEY"):
-        return "groq", os.environ["GROQ_API_KEY"]
     if os.getenv("GEMINI_API_KEY"):
         return "gemini", os.environ["GEMINI_API_KEY"]
-    if os.getenv("LLM_API_KEY"):
-        return "openai_compatible", os.environ["LLM_API_KEY"]
     return "none", ""
 
 
@@ -78,7 +69,11 @@ def _call_openai_compatible(
         "Content-Type": "application/json",
     }
 
-    models_to_try = [os.getenv("LLM_MODEL", "nvidia/nemotron-3.5-lightning:free")] + DEFAULT_MODELS
+    models_to_try = [
+        "nvidia/nemotron-3-super-120b-a12b:free",
+        os.getenv("LLM_MODEL", "nvidia/nemotron-3.5-lightning:free"),
+    ] + DEFAULT_MODELS
+
     # Deduplicate while preserving order
     seen = set()
     unique_models = []
@@ -100,16 +95,14 @@ def _call_openai_compatible(
 
         try:
             start_time = time.time()
-            with httpx.Client(timeout=10.0) as client:
+            with httpx.Client(timeout=3.0) as client:
                 resp = client.post(f"{base_url}/chat/completions", json=payload, headers=headers)
                 elapsed = time.time() - start_time
                 if resp.status_code == 200:
                     return resp.json(), candidate, elapsed
                 last_error = f"Model {candidate}: status {resp.status_code}"
-                logger.warning("[LLM] %s returned %s, trying next model...", candidate, resp.status_code)
         except Exception as exc:
             last_error = f"Model {candidate}: {exc}"
-            logger.warning("[LLM] %s failed (%s), trying next model...", candidate, exc)
 
     # Fallback: Try Gemini API directly if we have a key
     _load_env_file()

@@ -1,0 +1,17 @@
+version: v1
+identity:
+  api_key: ak_live_ca3f2a70374112c3a927fbdcffb28f4e6b9c8bb71cc979bfa2488d3691af7a59
+  user_id: infraguard-commander-service
+  agent_id: infraguard-commander
+environment: sandbox
+proxy:
+  url: https://proxy.armoriq.ai
+  timeout: 30
+  max_retries: 3
+mcp_servers: []
+policy:
+  allow: []
+  deny: []
+intent:
+  ttl_seconds: 300
+  require_csrg: true

@@ -1,0 +1,21 @@
+version: v1
+identity:
+  api_key: ARMORIQ_API_KEY
+  user_id: Test-services
+  agent_id: Test
+environment: sandbox
+proxy:
+  url: https://proxy.armoriq.ai
+  timeout: 30
+  max_retries: 3
+mcp_servers:
+- id: trycloudflare
+  url: https://shown-las-beginning-bin.trycloudflare.com
+  auth: none
+policy:
+  allow:
+  - trycloudflare.echo
+  deny: []
+intent:
+  ttl_seconds: 300
+  require_csrg: true

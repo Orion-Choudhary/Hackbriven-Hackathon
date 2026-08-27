@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  diagnostic-mcp:
+    build:
+      context: ./infraguard/mcp_servers/diagnostic_mcp
+      dockerfile: Dockerfile
+    container_name: infraguard-diagnostic-mcp
+    environment:
+      - PORT=8001
+      - HOST=0.0.0.0
+    ports:
+      - "8001:8001"
+    restart: unless-stopped
+
+  remediation-mcp:
+    build:
+      context: ./infraguard/mcp_servers/remediation_mcp
+      dockerfile: Dockerfile
+    container_name: infraguard-remediation-mcp
+    environment:
+      - PORT=8002
+      - HOST=0.0.0.0
+    ports:
+      - "8002:8002"
+    restart: unless-stopped
+
+  database-mcp:
+    build:
+      context: ./infraguard/mcp_servers/database_mcp
+      dockerfile: Dockerfile
+    container_name: infraguard-database-mcp
+    environment:
+      - PORT=8003
+      - HOST=0.0.0.0
+    ports:
+      - "8003:8003"
+    restart: unless-stopped

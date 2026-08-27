@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>InfraGuard — Autonomous Zero-Trust Incident Response Control Surface</title>
+  <meta name="description" content="Production-grade zero-trust authorization control surface for autonomous SRE agents powered by ArmorIQ and NVIDIA Nemotron.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body class="theme-obsidian">
+  <!-- Ambient Gradient Light Blooms -->
+  <div class="ambient-glow bloom-violet"></div>
+  <div class="ambient-glow bloom-blue"></div>
+  <div class="ambient-glow bloom-teal"></div>
+  <div class="dot-grid-canvas"></div>
+
+  <!-- Minimal Top Bar -->
+  <header class="top-nav">
+    <div class="nav-left">
+      <div class="brand-group">
+        <span class="shield-icon">🛡️</span>
+        <span class="brand-title">InfraGuard</span>
+      </div>
+      <div class="status-pill zero-trust-active">
+        <span class="pulse-dot"></span>
+        <span class="pill-text">Zero-Trust Enforced &bull; OPA Active</span>
+      </div>
+    </div>
+    
+    <div class="nav-center">
+      <div class="mode-toggle">
+        <button class="toggle-btn active" id="btnModeApp">App</button>
+        <button class="toggle-btn" id="btnModeWeb">Web</button>
+      </div>
+    </div>
+
+    <div class="nav-right">
+      <div class="model-pill">
+        <span class="model-tag">🧠 NVIDIA Nemotron</span>
+      </div>
+      <button class="btn-primary" id="btnRunMatrix">
+        <span>⚡ Run Security Matrix</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Viewport Layout -->
+  <main class="main-container">
+    
+    <!-- Left Workspace Column -->
+    <section class="workspace-col">
+      
+      <!-- Hero Section -->
+      <div class="hero-section">
+        <h1 class="hero-headline">
+          The agent's reasoning can be compromised.<br>
+          <span class="headline-gradient">Its authority cannot.</span>
+        </h1>
+        <p class="hero-subtitle">
+          Cryptographic Intent Verification & Merkle Subtree Delegation for Autonomous AI Incident Response.
+        </p>
+      </div>
+
+      <!-- Command & Prompt Surface -->
+      <div class="glass-card command-card">
+        <div class="command-input-wrapper">
+          <span class="command-prefix">&gt;</span>
+          <input 
+            type="text" 
+            id="promptInput" 
+            class="command-input" 
+            placeholder="Describe an incident or prompt sub-agents: e.g. Triage FinSecure payment latency outage..."
+            autocomplete="off"
+          />
+          <button id="btnExecutePrompt" class="btn-send" title="Execute Prompt">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </button>
+        </div>
+        
+        <!-- Suggested Prompt Capability Chips -->
+        <div class="chips-row">
+          <span class="chips-label">Quick Scenarios:</span>
+          <button class="chip-btn" data-scenario="prompt-injection">
+            <span class="chip-dot red"></span> 🚨 1. Prompt Injection Attack
+          </button>
+          <button class="chip-btn" data-scenario="parameter-tampering">
+            <span class="chip-dot yellow"></span> ⚠️ 2. Parameter Tampering
+          </button>
+          <button class="chip-btn" data-scenario="unauthorized-database">
+            <span class="chip-dot purple"></span> 🔒 3. Cross-MCP Database Pivot
+          </button>
+        </div>
+      </div>
+
+      <!-- Microservices & Functions Registry Grid -->
+      <div class="section-header">
+        <h2 class="section-title">Registered MCP Microservices</h2>
+        <span class="section-meta">3 Cloud Servers Deployed on Render</span>
+      </div>
+
+      <div class="services-grid" id="servicesGrid">
+        <!-- Diagnostic MCP Card -->
+        <div class="glass-card service-card" id="cardDiagnostic">
+          <div class="card-top">
+            <div class="service-identity">
+              <span class="service-icon">🔍</span>
+              <div>
+                <h3 class="service-name">Diagnostic MCP</h3>
+                <span class="service-route">/mcp (Port 8001)</span>
+              </div>
+            </div>
+            <span class="badge badge-active">Live Active</span>
+          </div>
+          <p class="service-desc">System container log extraction, latency telemetry & metric inspection.</p>
+          <div class="tools-list">
+            <span class="tool-tag">fetch_system_logs</span>
+            <span class="tool-tag">query_metrics</span>
+          </div>
+          <div class="card-footer">
+            <span class="footer-meta">Target: Render Cloud</span>
+            <span class="latency-pill">38ms</span>
+          </div>
+        </div>
+
+        <!-- Remediation MCP Card -->
+        <div class="glass-card service-card" id="cardRemediation">
+          <div class="card-top">
+            <div class="service-identity">
+              <span class="service-icon">⚡</span>
+              <div>
+                <h3 class="service-name">Remediation MCP</h3>
+                <span class="service-route">/mcp (Port 8002)</span>
+              </div>
+            </div>
+            <span class="badge badge-scoped">Scoped Blast Radius</span>
+          </div>
+          <p class="service-desc">Automated container recovery, staging-first restart orchestration.</p>
+          <div class="tools-list">
+            <span class="tool-tag">restart_payment_service</span>
+          </div>
+          <div class="card-footer">
+            <span class="footer-meta">Policy: Staging Enforced</span>
+            <span class="latency-pill">41ms</span>
+          </div>
+        </div>
+
+        <!-- Database MCP Card -->
+        <div class="glass-card service-card" id="cardDatabase">
+          <div class="card-top">
+            <div class="service-identity">
+              <span class="service-icon">🗄️</span>
+              <div>
+                <h3 class="service-name">Database MCP</h3>
+                <span class="service-route">/mcp (Port 8003)</span>
+              </div>
+            </div>
+            <span class="badge badge-isolated">Isolated Boundary</span>
+          </div>
+          <p class="service-desc">Database lock table inspection and state snapshot querying.</p>
+          <div class="tools-list">
+            <span class="tool-tag">read_lock_snapshot</span>
+          </div>
+          <div class="card-footer">
+            <span class="footer-meta">Isolation: Cross-Pivot Blocked</span>
+            <span class="latency-pill">44ms</span>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- Right-Hand Rail: Agent Transparency Panel -->
+    <aside class="transparency-rail">
+      <div class="glass-card transparency-panel" id="transparencyPanel">
+        
+        <div class="panel-header">
+          <div class="panel-title-group">
+            <span class="panel-icon">🧠</span>
+            <div>
+              <h2 class="panel-title">Agent Transparency Feed</h2>
+              <span class="panel-subtitle">Live Cryptographic Chain of Custody</span>
+            </div>
+          </div>
+          <div class="trust-token-badge" id="trustTokenBadge">
+            <span class="token-icon">🔑</span>
+            <span class="token-id" id="tokenIdText">Intent Token: Idle</span>
+          </div>
+        </div>
+
+        <!-- Live Step Stream Container -->
+        <div class="stream-container" id="streamContainer">
+          <div class="empty-state" id="emptyState">
+            <div class="radar-scan"></div>
+            <p class="empty-title">Awaiting Incident Alert</p>
+            <p class="empty-subtitle">
+              All sub-agents dormant with zero standing privileges.<br>
+              Cryptographic intent token and Merkle proof will mint upon incident intake.
+            </p>
+          </div>
+        </div>
+
+        <!-- Security Intercept / Outcome Card -->
+        <div class="verdict-card" id="verdictCard" style="display: none;">
+          <div class="verdict-header">
+            <span class="verdict-icon" id="verdictIcon">🛡️</span>
+            <div>
+              <h4 class="verdict-title" id="verdictTitle">Zero-Trust Intercept Result</h4>
+              <p class="verdict-meta" id="verdictMeta">ArmorIQ OPA Enforcement Gateway</p>
+            </div>
+          </div>
+          <div class="verdict-body" id="verdictBody">
+            <!-- Dynamic enforcement description -->
+          </div>
+        </div>
+
+      </div>
+    </aside>
+
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>

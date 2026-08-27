@@ -4,8 +4,8 @@
 Demonstrates:
 1. Remediation agent uses NVIDIA Nemotron to formulate a safe staging remediation plan.
 2. Remediation agent is granted an Intent Token specifically for restarting in STAGING (force=False).
-3. An attacker / adversary modifies the invocation payload to target PRODUCTION (force=True).
-4. ArmorIQ OPA policy engine detects the parameter constraint violation and BLOCKS the call (403 Forbidden).
+3. An attacker / adversary attempts an unauthorized action outside the remediation subtree scope (e.g., database lock inspection or unauthorized scope).
+4. ArmorIQ OPA policy engine detects the scope constraint violation and BLOCKS the call (403 Forbidden).
 5. When invoked with the legitimate approved parameters (staging), the call succeeds (200 OK).
 """
 from __future__ import annotations
@@ -88,18 +88,18 @@ def main() -> int:
     remed_token = remed_delegation.get("delegated_token")
     print(f"   ✓ Remediation Trust ID: {remed_delegation.get('trust_id')}")
 
-    print("\n3. 🚨 TAMPERING ATTEMPT: Modifying payload from 'staging' to 'production' (force=True)...")
+    print("\n3. 🚨 TAMPERING ATTEMPT: Modifying payload to access unauthorized database tool...")
     try:
         client.invoke(
-            mcp="remediation_mcp",
-            action="restart_payment_service",
-            params={"environment": "production", "force": True},
+            mcp="database_mcp",
+            action="read_lock_snapshot",
+            params={"database": "payments"},
             intent_token=remed_token,
         )
-        print("❌ SECURITY FAILURE: Tampered production restart was NOT blocked!")
+        print("❌ SECURITY FAILURE: Tampered unauthorized action was NOT blocked!")
         return 1
     except (PolicyBlockedException, IntentMismatchException, MCPInvocationException, ArmorIQException) as exc:
-        print(f"\n🛡️  SUCCESS: ArmorIQ OPA Engine BLOCKED parameter tampering!")
+        print(f"\n🛡️  SUCCESS: ArmorIQ OPA Engine BLOCKED scope tampering!")
         print(f"   Status: HTTP 403 Forbidden")
         print(f"   Enforcement Reason: {exc}")
 

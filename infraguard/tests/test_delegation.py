@@ -68,16 +68,18 @@ class CloudDelegationTests(unittest.TestCase):
         )
         commander_token = client.get_intent_token(capture, validity_seconds=300)
 
-        delegation = client.delegate(
+        delegation = client.delegate_subtree(
             intent_token=commander_token,
             delegate_public_key="infraguard-diagnostic-key",
+            subtree_path="/steps/[0]",
             validity_seconds=3600,
-            allowed_actions=["diagnostic_mcp.fetch_system_logs"],
+            parent_plan=plan,
             target_agent="diagnostic",
         )
 
         self.assertIsNotNone(delegation)
-        self.assertIsNotNone(getattr(delegation, "delegated_token", None))
+        self.assertIn("delegated_token", delegation)
+        self.assertIsNotNone(delegation["delegated_token"])
 
 
 if __name__ == "__main__":

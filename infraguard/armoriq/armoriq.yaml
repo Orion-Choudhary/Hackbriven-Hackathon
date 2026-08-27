@@ -5,7 +5,7 @@ identity:
   user_id: infraguard-commander-service
   agent_id: infraguard-commander
 
-environment: sandbox
+environment: production
 
 proxy:
   url: https://proxy.armoriq.ai

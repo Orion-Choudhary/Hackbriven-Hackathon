@@ -29,5 +29,23 @@ def query_metrics(metric: str = "payment_api_latency_seconds") -> dict[str, floa
     }
 
 
+import argparse
+import os
+from mcp.server.transport_security import TransportSecuritySettings
+
 if __name__ == "__main__":
-    mcp.run(transport="streamable-http")
+    parser = argparse.ArgumentParser(description="InfraGuard Diagnostic MCP")
+    parser.add_argument("--port", type=int, default=int(os.getenv("PORT", "8001")), help="Port to listen on")
+    parser.add_argument("--host", default=os.getenv("HOST", "0.0.0.0"), help="Host to bind")
+    args = parser.parse_args()
+
+    security_settings = TransportSecuritySettings(
+        enable_dns_rebinding_protection=False,
+    )
+
+    mcp.run(
+        transport="streamable-http",
+        host=args.host,
+        port=args.port,
+        transport_security=security_settings,
+    )

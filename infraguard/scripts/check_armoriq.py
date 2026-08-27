@@ -21,7 +21,26 @@ def mask(value: str | None, visible: int = 4) -> str:
     return f"{value[:visible]}...{value[-visible:]}"
 
 
+def _load_env_file() -> None:
+    for env_path in [
+        Path(".env"),
+        Path("../.env"),
+        Path(__file__).resolve().parents[1] / ".env",
+        Path(__file__).resolve().parents[2] / ".env",
+    ]:
+        if env_path.is_file():
+            for line in env_path.read_text(encoding="utf-8").splitlines():
+                line = line.strip()
+                if line and not line.startswith("#") and "=" in line:
+                    k, v = line.split("=", 1)
+                    k, v = k.strip(), v.strip().strip("'\"")
+                    if k and k not in os.environ:
+                        os.environ[k] = v
+            break
+
+
 def main() -> int:
+    _load_env_file()
     print("[InfraGuard] ArmorIQ environment check")
     print("=" * 50)
 

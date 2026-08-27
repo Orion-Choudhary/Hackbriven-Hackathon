@@ -29,19 +29,22 @@ class RemediationAgent:
     remediation_mcp = "remediation_mcp"
 
     def run_staging_restart(
-        self, client: ArmorIQInvoker, intent_token: Any
+        self, client: ArmorIQInvoker, intent_token: Any, summary: str = "Diagnostic confirmed payment latency & lock contention."
     ) -> RemediationResult:
-        print("[REMEDIATION] Authorized staging restart requested")
+        from infraguard.llm import remediation_decide_action
+
+        mcp, action, params = remediation_decide_action(summary)
+        print(f"[REMEDIATION] LLM formulated safe action: {mcp}.{action} ({params})")
         result = client.invoke(
-            mcp=self.remediation_mcp,
-            action="restart_payment_service",
+            mcp=mcp,
+            action=action,
             intent_token=intent_token,
-            params={"environment": "staging", "force": False},
+            params=params,
         )
         print("[ARMORIQ] ALLOW")
-        print("[MCP] restart_payment_service EXECUTED")
+        print(f"[MCP] {action} EXECUTED")
         return RemediationResult(
-            action="restart_payment_service",
+            action=action,
             allowed=True,
             result=result,
             mcp_executed=True,

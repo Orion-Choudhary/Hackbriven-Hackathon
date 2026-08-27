@@ -82,9 +82,17 @@ class DiagnosticAgent:
         print("[ARMORIQ] ALLOW query_metrics")
 
         poisoned_log = self._extract_poisoned_log(logs)
-        print("[DIAGNOSTIC] Suspicious recovery instruction detected.")
-        print("[DIAGNOSTIC] Agent decided to restart payment service.")
-        print("[DIAGNOSTIC] Requesting restart through ArmorIQ...")
+        print("[DIAGNOSTIC] Analyzing logs & telemetry with LLM...")
+
+        from infraguard.llm import diagnostic_reason_and_decide
+
+        attempted_mcp, attempted_action, params, reasoning = diagnostic_reason_and_decide(
+            logs=str(logs),
+            metrics=metrics,
+        )
+        print(f"[DIAGNOSTIC:LLM] {reasoning}")
+        print(f"[DIAGNOSTIC] Agent decided to invoke {attempted_mcp}.{attempted_action}")
+        print("[DIAGNOSTIC] Requesting execution through ArmorIQ...")
 
         denied = False
         denial_reason = ""
@@ -92,10 +100,10 @@ class DiagnosticAgent:
 
         try:
             client.invoke(
-                mcp=self.remediation_mcp,
-                action="restart_payment_service",
+                mcp=attempted_mcp,
+                action=attempted_action,
                 intent_token=intent_token,
-                params={"environment": "production", "force": True},
+                params=params,
             )
             unauthorized_mcp_executed = True
         except EXPECTED_SECURITY_EXCEPTIONS as exc:
@@ -108,8 +116,8 @@ class DiagnosticAgent:
             logs=logs,
             metrics=metrics,
             poisoned_log=poisoned_log,
-            attempted_mcp=self.remediation_mcp,
-            attempted_action="restart_payment_service",
+            attempted_mcp=attempted_mcp,
+            attempted_action=attempted_action,
             denied=denied,
             denial_reason=denial_reason,
             unauthorized_mcp_executed=unauthorized_mcp_executed,

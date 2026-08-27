@@ -6,6 +6,7 @@ from pathlib import Path
 from pprint import pprint
 
 from infraguard.core import LocalAuthorizationGateway, build_commander_plan
+from infraguard.llm import commander_generate_plan
 
 logging.basicConfig(
     level=logging.INFO,
@@ -21,7 +22,8 @@ REMEDIATION_ACTIONS = ["remediation_mcp.restart_payment_service"]
 
 
 def run_local_demo() -> None:
-    plan = build_commander_plan()
+    incident = "FinSecure payment API latency exceeds 5 seconds"
+    sdk_plan = commander_generate_plan(incident)
     gateway = LocalAuthorizationGateway()
 
     diagnostic_token = gateway.delegate(
@@ -34,7 +36,7 @@ def run_local_demo() -> None:
     )
 
     logger.info("Commander captured incident plan:")
-    pprint(plan.to_sdk_plan())
+    pprint(sdk_plan)
     logger.info("Delegated diagnostic scope: %s", sorted(diagnostic_token.allowed_actions))
     logger.info("Delegated remediation scope: %s", sorted(remediation_token.allowed_actions))
 
@@ -51,7 +53,8 @@ def run_armoriq_flow(config_path: Path) -> None:
     )
 
     client = ArmorIQClient.from_config(str(config_path))
-    plan = build_commander_plan()
+    incident = "FinSecure payment API latency exceeds 5 seconds"
+    sdk_plan = commander_generate_plan(incident)
 
     logger.info("Resolved ArmorIQ endpoints:")
     logger.info("backend: %s", getattr(client, "backend_endpoint", None))
@@ -62,7 +65,7 @@ def run_armoriq_flow(config_path: Path) -> None:
     capture = client.capture_plan(
         llm="infraguard-demo",
         prompt="Diagnose the FinSecure payment outage with least privilege.",
-        plan=plan.to_sdk_plan(),
+        plan=sdk_plan,
         metadata={"scenario": "finsecure-payment-outage"},
     )
     logger.info("Plan captured.")
@@ -71,43 +74,39 @@ def run_armoriq_flow(config_path: Path) -> None:
     commander_token = client.get_intent_token(capture, validity_seconds=300)
     logger.info("Intent token created: %s", getattr(commander_token, "token_id", "<unknown>"))
 
-    logger.info("Delegating to Diagnostic...")
-    diagnostic_delegation = client.delegate(
+    logger.info("Delegating to Diagnostic via delegate_subtree...")
+    diagnostic_delegation = client.delegate_subtree(
         intent_token=commander_token,
         delegate_public_key="infraguard-diagnostic-key",
+        subtree_path="/steps/[0]",
         validity_seconds=3600,
-        allowed_actions=DIAGNOSTIC_ACTIONS,
+        parent_plan=plan.to_sdk_plan(),
         target_agent="diagnostic",
     )
     logger.info(
-        "Diagnostic delegation created: %s",
-        getattr(diagnostic_delegation, "delegation_id", "<unknown>"),
+        "Diagnostic subtree delegation created. Trust ID: %s",
+        diagnostic_delegation.get("trust_id", "<unknown>"),
     )
 
-    logger.info("Delegating to Remediation...")
-    remediation_delegation = client.delegate(
+    logger.info("Delegating to Remediation via delegate_subtree...")
+    remediation_delegation = client.delegate_subtree(
         intent_token=commander_token,
         delegate_public_key="infraguard-remediation-key",
+        subtree_path="/steps/[2]",
         validity_seconds=3600,
-        allowed_actions=REMEDIATION_ACTIONS,
+        parent_plan=plan.to_sdk_plan(),
         target_agent="remediation",
     )
     logger.info(
-        "Remediation delegation created: %s",
-        getattr(remediation_delegation, "delegation_id", "<unknown>"),
+        "Remediation subtree delegation created. Trust ID: %s",
+        remediation_delegation.get("trust_id", "<unknown>"),
     )
 
     logger.info("Delegated authority handed to agents.")
-    logger.info(
-        "Diagnostic allowed: %s",
-        sorted(getattr(diagnostic_delegation, "allowed_actions", []) or DIAGNOSTIC_ACTIONS),
-    )
-    logger.info(
-        "Remediation allowed: %s",
-        sorted(getattr(remediation_delegation, "allowed_actions", []) or REMEDIATION_ACTIONS),
-    )
+    logger.info("Diagnostic allowed: %s", sorted(DIAGNOSTIC_ACTIONS))
+    logger.info("Remediation allowed: %s", sorted(REMEDIATION_ACTIONS))
 
-    diagnostic_token = getattr(diagnostic_delegation, "delegated_token", None)
+    diagnostic_token = diagnostic_delegation.get("delegated_token")
     if diagnostic_token is None:
         logger.warning("Diagnostic delegated token not available; skipping invoke probe.")
         return

@@ -1,65 +1,33 @@
-# InfraGuard
+# 🛡️ InfraGuard
 
-InfraGuard is a least-privilege authorization demo for autonomous incident-response agents.
+> **"The agent's reasoning can be compromised. Its authority cannot."**
 
-Core message:
+InfraGuard is a production-grade, least-privilege zero-trust authorization architecture for autonomous incident-response agents built on **ArmorIQ SDK v2**.
 
-> The agent's reasoning can be compromised. Its authority cannot.
+For full architecture documentation, live cloud endpoint registries, and the attack benchmark matrix, please see the [Master README.md](../README.md).
 
-The demo models a FinSecure payment outage where Diagnostic reads poisoned logs and tries to restart a service. Diagnostic only receives authority for diagnostic tools, so the restart attempt is denied. Remediation receives separate authority for the staging restart.
+---
 
-## Quick Start
+## ⚡ Quick Run
 
+### 1. Run the Full Security Matrix (All 3 Live Attacks)
 ```powershell
-cd infraguard
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-pytest
+python infraguard/scripts/run_full_security_showcase.py
 ```
 
-Run the local demo paths:
-
+### 2. Run the Autonomous Commander Agent
 ```powershell
-python -m infraguard.agents.commander.main
-python -m infraguard.agents.diagnostic.main
-python -m infraguard.agents.remediation.main
+python -m infraguard.agents.commander.main --armoriq
 ```
 
-## ArmorIQ SDK v2
-
-The project uses:
-
-```python
-from armoriq_sdk import ArmorIQClient
-```
-
-The expected SDK flow is:
-
-```text
-capture_plan()
-get_intent_token()
-delegate()
-invoke()
-```
-
-`get_intent_token()` talks to the ArmorIQ backend/IAP token endpoint. `invoke()` talks to `{proxy_endpoint}/invoke`; it should not be changed to call an MCP `/mcp` URL directly.
-
-Set credentials in your shell, not in Git:
-
+### 3. Run Unit & Authorization Tests
 ```powershell
-$env:ARMORIQ_API_KEY="YOUR_KEY"
-$env:BACKEND_ENDPOINT="https://api.armoriq.ai"
-$env:IAP_ENDPOINT="https://iap.armoriq.ai"
-$env:PROXY_ENDPOINT="https://proxy.armoriq.ai"
+pytest infraguard/tests -v
 ```
 
-Verify endpoints in the same shell used to run the SDK:
+---
 
-```powershell
-python -c "from armoriq_sdk import ArmorIQClient; c=ArmorIQClient.from_config('armoriq/armoriq.yaml'); print('backend:', c.backend_endpoint); print('iap:', c.iap_endpoint); print('proxy:', c.default_proxy_endpoint)"
-```
-
-## Current Caution
-
-Registration, tool discovery, and token issuance are separate from proxy execution. A `404 Not Found` from `https://proxy.armoriq.ai/invoke` should be investigated as a proxy routing, registration, deployment, or networking issue. Do not claim it is definitely caused by Cloudflare without evidence.
+## 🌐 Live MCP Endpoints (Render Cloud)
+- **Diagnostic MCP**: `https://infraguard-diagnostic-mcp.onrender.com/mcp`
+- **Remediation MCP**: `https://infraguard-remediation-mcp.onrender.com/mcp`
+- **Database MCP**: `https://infraguard-database-mcp.onrender.com/mcp`

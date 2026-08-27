@@ -13,3 +13,8 @@ env/
 *.key
 *.pem
 *.token
+
+# Graphify artifacts
+graphify/
+.graphify/
+*graphify*

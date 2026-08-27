@@ -59,5 +59,5 @@ The content Diagnostic reads can influence its reasoning, but it does not expand
 ## Known Integration Issues
 
 - Proxy invocation currently returns `404 Not Found` from `https://proxy.armoriq.ai/invoke` in our testing environment, even though registration, tool discovery, and token issuance succeed. The exact cause is unproven. Potential causes include proxy routing/registration mismatch, MCP registration state, Cloudflare tunnel behavior, or environment mismatch.
-- PowerShell and Conda shells can resolve different endpoint environments. Always verify endpoints in the same shell used to run the application.
+- PowerShell and other shells can resolve different endpoint environments. Always verify endpoints in the same shell used to run the application.
 - The `armoriq-test.yaml` / config API key must be provided via environment variable; do not hardcode secrets in YAML.

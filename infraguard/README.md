@@ -12,7 +12,8 @@ The demo models a FinSecure payment outage where Diagnostic reads poisoned logs 
 
 ```powershell
 cd infraguard
-conda activate InfraGuard
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 pytest
 ```

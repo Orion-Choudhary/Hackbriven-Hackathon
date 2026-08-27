@@ -800,6 +800,55 @@ body {
   margin-top: 3px;
 }
 
+/* Nemotron Chain of Thought Visualizer Box */
+.nemotron-thought-box {
+  background: rgba(129, 140, 248, 0.04);
+  border: 1px solid rgba(129, 140, 248, 0.18);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  margin: 6px 0;
+}
+
+.thought-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.thought-tag {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--accent-subtle);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.thought-latency {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--text-muted);
+}
+
+.thought-content {
+  font-size: 12px;
+  color: #E4E4E7;
+  line-height: 1.45;
+  font-style: italic;
+}
+
+.log-snippet {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+  padding: 6px 8px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+  white-space: pre-wrap;
+}
+
 /* Verdict Result Card */
 .verdict-card {
   margin-top: 10px;

@@ -588,6 +588,30 @@ body {
   color: var(--text-secondary);
 }
 
+.loading-pulse {
+  display: inline-block;
+  animation: pulseOpacity 1.2s infinite ease-in-out;
+  color: var(--accent-primary-subtle);
+  font-size: 14px;
+}
+
+@keyframes pulseOpacity {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 1; }
+}
+
+/* Tool Call Bar */
+.tool-call-box {
+  background: var(--bg-input);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 6px 8px;
+  border-radius: var(--radius-xs);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-primary);
+  margin-top: 2px;
+}
+
 /* Stream Container & Step Traces */
 .stream-container {
   flex: 1;

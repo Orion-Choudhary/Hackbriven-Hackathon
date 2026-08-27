@@ -199,8 +199,33 @@ class InfraGuardRequestHandler(SimpleHTTPRequestHandler):
                 "llm_engine": os.getenv("LLM_MODEL", "nvidia/nemotron-3.5-lightning:free"),
             })
             return
-        if parsed.path in ("/", "/index.html"):
-            self.path = "/index.html"
+
+        # Explicitly serve frontend files with accurate MIME types
+        target_file = None
+        content_type = "text/html; charset=utf-8"
+        if parsed.path in ("/", "/index.html", ""):
+            target_file = FRONTEND_DIR / "index.html"
+            content_type = "text/html; charset=utf-8"
+        elif parsed.path == "/style.css":
+            target_file = FRONTEND_DIR / "style.css"
+            content_type = "text/css; charset=utf-8"
+        elif parsed.path == "/app.js":
+            target_file = FRONTEND_DIR / "app.js"
+            content_type = "application/javascript; charset=utf-8"
+
+        if target_file and target_file.is_file():
+            try:
+                content = target_file.read_bytes()
+                self.send_response(200)
+                self.send_header("Content-Type", content_type)
+                self.send_header("Content-Length", str(len(content)))
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.end_headers()
+                self.wfile.write(content)
+                return
+            except Exception:
+                pass
+
         return super().do_GET()
 
     def do_POST(self):

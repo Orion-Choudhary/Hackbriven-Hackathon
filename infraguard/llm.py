@@ -19,9 +19,10 @@ logger = logging.getLogger("infraguard.llm")
 # Primary model requested by user, with reliable fast fallbacks on OpenRouter free tier
 DEFAULT_MODELS = [
     "nvidia/nemotron-3.5-lightning:free",
-    "nvidia/llama-3.1-nemotron-70b-instruct:free",
-    "meta-llama/llama-3.3-70b-instruct:free",
-    "mistralai/mistral-7b-instruct:free",
+    "google/gemma-4-31b-it:free",
+    "google/gemma-4-26b-a4b-it:free",
+    "nvidia/nemotron-3-super-120b-a12b:free",
+    "minimax/minimax-m2.7:free",
 ]
 
 
@@ -66,8 +67,9 @@ def _call_openai_compatible(
     base_url: str = "https://openrouter.ai/api/v1",
     model: str | None = None,
 ) -> tuple[dict[str, Any], str, float]:
-    """Execute chat completion across preferred models.
+    """Execute chat completion across preferred models with fallback chain.
     
+    Tries OpenRouter models first, then falls back to Gemini API if available.
     Returns: (response_json, model_name_used, elapsed_seconds)
     """
     provider, api_key = _get_api_key()
@@ -76,23 +78,80 @@ def _call_openai_compatible(
         "Content-Type": "application/json",
     }
 
-    candidate = os.getenv("LLM_MODEL", "nvidia/nemotron-3.5-lightning:free")
-    payload: dict[str, Any] = {
-        "model": candidate,
-        "messages": messages,
-        "temperature": 0.1,
-    }
-    if tools:
-        payload["tools"] = tools
-        payload["tool_choice"] = "auto"
+    models_to_try = [os.getenv("LLM_MODEL", "nvidia/nemotron-3.5-lightning:free")] + DEFAULT_MODELS
+    # Deduplicate while preserving order
+    seen = set()
+    unique_models = []
+    for m in models_to_try:
+        if m not in seen:
+            seen.add(m)
+            unique_models.append(m)
 
-    start_time = time.time()
-    with httpx.Client(timeout=2.5) as client:
-        resp = client.post(f"{base_url}/chat/completions", json=payload, headers=headers)
-        elapsed = time.time() - start_time
-        if resp.status_code == 200:
-            return resp.json(), candidate, elapsed
-        raise RuntimeError(f"OpenRouter returned status {resp.status_code}: {resp.text[:120]}")
+    last_error = None
+    for candidate in unique_models:
+        payload: dict[str, Any] = {
+            "model": candidate,
+            "messages": messages,
+            "temperature": 0.1,
+        }
+        if tools:
+            payload["tools"] = tools
+            payload["tool_choice"] = "auto"
+
+        try:
+            start_time = time.time()
+            with httpx.Client(timeout=10.0) as client:
+                resp = client.post(f"{base_url}/chat/completions", json=payload, headers=headers)
+                elapsed = time.time() - start_time
+                if resp.status_code == 200:
+                    return resp.json(), candidate, elapsed
+                last_error = f"Model {candidate}: status {resp.status_code}"
+                logger.warning("[LLM] %s returned %s, trying next model...", candidate, resp.status_code)
+        except Exception as exc:
+            last_error = f"Model {candidate}: {exc}"
+            logger.warning("[LLM] %s failed (%s), trying next model...", candidate, exc)
+
+    # Fallback: Try Gemini API directly if we have a key
+    _load_env_file()
+    gemini_key = os.getenv("GEMINI_API_KEY")
+    if gemini_key:
+        try:
+            logger.info("[LLM] All OpenRouter models failed. Falling back to Gemini API...")
+            # Convert OpenAI messages to Gemini format
+            prompt_parts = []
+            for msg in messages:
+                role = msg.get("role", "user")
+                content = msg.get("content", "")
+                if role == "system":
+                    prompt_parts.append(f"System instructions: {content}")
+                else:
+                    prompt_parts.append(content)
+            combined_prompt = "\n\n".join(prompt_parts)
+
+            gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={gemini_key}"
+            gemini_payload = {
+                "contents": [{"parts": [{"text": combined_prompt}]}],
+                "generationConfig": {"temperature": 0.1},
+            }
+
+            start_time = time.time()
+            with httpx.Client(timeout=15.0) as client:
+                resp = client.post(gemini_url, json=gemini_payload)
+                elapsed = time.time() - start_time
+                if resp.status_code == 200:
+                    gemini_data = resp.json()
+                    content = gemini_data["candidates"][0]["content"]["parts"][0]["text"]
+                    # Wrap in OpenAI-compatible response format
+                    return {
+                        "choices": [{"message": {"content": content, "role": "assistant"}}]
+                    }, "gemini-2.0-flash (via Gemini API)", elapsed
+                last_error = f"Gemini API: status {resp.status_code}: {resp.text[:120]}"
+        except Exception as exc:
+            last_error = f"Gemini API: {exc}"
+            logger.warning("[LLM] Gemini fallback also failed: %s", exc)
+
+    raise RuntimeError(f"All models failed. Last error: {last_error}")
+
 
 
 def _extract_json(text: str) -> dict[str, Any] | None:

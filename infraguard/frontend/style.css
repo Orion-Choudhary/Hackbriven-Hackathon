@@ -1,15 +1,17 @@
 /* ==========================================================================
    InfraGuard Clean Obsidian Design System
-   Aesthetic: Understated, Uniform, Zero Emojis, Subtle Lighting & SVGs
+   Aesthetic: Understated, Uniform, Zero Emojis, Hierarchical Governance Tree
    ========================================================================== */
 
 :root {
   --bg-canvas: #09090B;
   --surface-glass: rgba(18, 18, 22, 0.72);
   --surface-glass-card: rgba(24, 24, 28, 0.6);
+  --surface-glass-master: rgba(26, 26, 32, 0.85);
   --surface-glass-input: rgba(13, 13, 16, 0.85);
   
   --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-master: rgba(129, 140, 248, 0.28);
   --border-hover: rgba(255, 255, 255, 0.16);
   
   --accent-subtle: #818CF8;
@@ -372,71 +374,194 @@ body {
   color: var(--text-muted);
 }
 
-/* Microservices Grid */
-.services-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-  gap: 14px;
-}
+/* ==========================================================================
+   Governance Tree & Master / Subordinate Hierarchical Layout
+   ========================================================================== */
 
-.service-card {
-  padding: 18px;
+.governance-tree {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  align-items: center;
+  width: 100%;
 }
 
-.service-card:hover {
-  border-color: var(--border-hover);
+/* Master Control Plane Node */
+.master-node {
+  width: 100%;
+  background: var(--surface-glass-master);
+  border: 1px solid var(--border-master);
+  border-radius: var(--radius-lg);
+  padding: 18px 22px;
+  box-shadow: 0 10px 30px rgba(99, 102, 241, 0.06);
 }
 
-.card-top {
+.master-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
-.service-identity {
+.master-identity {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.service-svg {
-  width: 18px;
-  height: 18px;
+.master-icon {
+  width: 22px;
+  height: 22px;
+  color: var(--accent-subtle);
+}
+
+.master-title {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.master-subtitle {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  display: block;
+}
+
+.badge-governor {
+  background: rgba(129, 140, 248, 0.12);
+  color: var(--accent-subtle);
+  border: 1px solid rgba(129, 140, 248, 0.28);
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.02em;
+}
+
+.master-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.45;
+  margin-bottom: 12px;
+}
+
+.master-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.master-pill {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-subtle);
+  padding: 2px 8px;
+  border-radius: 4px;
   color: var(--text-secondary);
 }
 
-.service-name {
-  font-size: 13.5px;
-  font-weight: 600;
+/* Tree Connectors */
+.tree-connectors {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  height: 32px;
 }
 
-.service-sub {
+.connector-stem {
+  width: 1px;
+  height: 16px;
+  background: linear-gradient(to bottom, var(--border-master), var(--border-subtle));
+}
+
+.connector-branches {
+  width: 75%;
+  height: 16px;
+  border-top: 1px solid var(--border-subtle);
+  border-left: 1px solid var(--border-subtle);
+  border-right: 1px solid var(--border-subtle);
+  position: relative;
+}
+
+.branch-center {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 1px;
+  height: 16px;
+  background: var(--border-subtle);
+}
+
+/* Subordinate / Governed Grid */
+.subordinate-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  width: 100%;
+}
+
+.subordinate-card {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: rgba(20, 20, 24, 0.55);
+  border: 1px solid var(--border-subtle);
+}
+
+.subordinate-card:hover {
+  border-color: var(--border-hover);
+}
+
+.subordinate-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.subordinate-identity {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.subordinate-svg {
+  width: 16px;
+  height: 16px;
+  color: var(--text-muted);
+}
+
+.subordinate-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.subordinate-sub {
   font-size: 11px;
   color: var(--text-muted);
   display: block;
 }
 
-.badge {
+.badge-subtle {
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-muted);
+  border: 1px solid var(--border-subtle);
   font-size: 10px;
   font-weight: 500;
-  padding: 2px 7px;
+  padding: 2px 6px;
   border-radius: 4px;
 }
 
-.badge-subtle {
-  background: rgba(255, 255, 255, 0.04);
-  color: var(--text-secondary);
-  border: 1px solid var(--border-subtle);
-}
-
-.service-desc {
-  font-size: 12px;
+.subordinate-desc {
+  font-size: 11.5px;
   color: var(--text-muted);
-  margin-bottom: 12px;
+  margin-bottom: 10px;
   line-height: 1.4;
 }
 
@@ -444,38 +569,38 @@ body {
   display: flex;
   flex-wrap: wrap;
   gap: 5px;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
 .tool-tag {
   font-family: var(--font-mono);
-  font-size: 11px;
-  background: rgba(255, 255, 255, 0.03);
+  font-size: 10.5px;
+  background: rgba(255, 255, 255, 0.025);
   border: 1px solid var(--border-subtle);
-  padding: 2px 6px;
+  padding: 2px 5px;
   border-radius: 4px;
   color: var(--text-secondary);
 }
 
-.card-footer {
+.subordinate-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-top: 10px;
+  padding-top: 8px;
   border-top: 1px solid rgba(255, 255, 255, 0.04);
 }
 
 .footer-meta {
-  font-size: 11px;
+  font-size: 10.5px;
   color: var(--text-muted);
 }
 
 .latency-pill {
   font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--text-secondary);
-  background: rgba(255, 255, 255, 0.03);
-  padding: 1px 6px;
+  font-size: 10.5px;
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.025);
+  padding: 1px 5px;
   border-radius: 4px;
 }
 
@@ -730,6 +855,14 @@ body {
   .main-container {
     grid-template-columns: 1fr;
     padding: 18px 16px;
+  }
+  
+  .subordinate-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .tree-connectors {
+    display: none;
   }
   
   .transparency-rail {

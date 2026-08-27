@@ -98,88 +98,130 @@
         </div>
       </div>
 
-      <!-- Microservices Registry Grid -->
+      <!-- Governing Subsystem & Subordinate Microservices Tree -->
       <div class="section-header">
-        <h2 class="section-title">Registered MCP Microservices</h2>
-        <span class="section-meta">Cloud-Hosted Micro-Segmentation</span>
+        <h2 class="section-title">Zero-Trust Governing Architecture</h2>
+        <span class="section-meta">Root Gateway &bull; Delegated Subtrees</span>
       </div>
 
-      <div class="services-grid" id="servicesGrid">
-        <!-- Diagnostic MCP Card -->
-        <div class="glass-card service-card" id="cardDiagnostic">
-          <div class="card-top">
-            <div class="service-identity">
-              <svg class="service-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                <circle cx="11" cy="11" r="8"/>
-                <path d="m21 21-4.3-4.3"/>
+      <div class="governance-tree" id="governanceTree">
+        
+        <!-- Master Authority / Governing Gateway Node -->
+        <div class="glass-card master-node" id="masterGatewayNode">
+          <div class="master-header">
+            <div class="master-identity">
+              <svg class="master-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                <path d="m9 12 2 2 4-4"/>
               </svg>
               <div>
-                <h3 class="service-name">Diagnostic MCP</h3>
-                <span class="service-sub">Telemetry & Log Ingestion</span>
+                <h3 class="master-title">Commander & ArmorIQ Zero-Trust Gateway</h3>
+                <span class="master-subtitle">Governing Root Authority &bull; Cryptographic Merkle Root Proofs</span>
               </div>
             </div>
-            <span class="badge badge-subtle">Online</span>
+            <span class="badge badge-governor">Master Control Plane</span>
           </div>
-          <p class="service-desc">Container log ingestion, latency telemetry & metric inspection.</p>
-          <div class="tools-list">
-            <span class="tool-tag">fetch_system_logs</span>
-            <span class="tool-tag">query_metrics</span>
-          </div>
-          <div class="card-footer">
-            <span class="footer-meta">Scope: Diagnostic Subtree</span>
-            <span class="latency-pill">38ms</span>
+          <p class="master-desc">
+            Enforces policy constraints, mints signed CSRG Root Intent Tokens, and cryptographically delegates isolated subtrees to subordinate MCP microservices.
+          </p>
+          <div class="master-footer">
+            <span class="master-pill">Policy: OPA Active</span>
+            <span class="master-pill">CSRG Merkle Verification</span>
+            <span class="master-pill">Micro-Segmentation: Strict</span>
           </div>
         </div>
 
-        <!-- Remediation MCP Card -->
-        <div class="glass-card service-card" id="cardRemediation">
-          <div class="card-top">
-            <div class="service-identity">
-              <svg class="service-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
-              </svg>
-              <div>
-                <h3 class="service-name">Remediation MCP</h3>
-                <span class="service-sub">Container Recovery</span>
-              </div>
-            </div>
-            <span class="badge badge-subtle">Scoped</span>
-          </div>
-          <p class="service-desc">Automated container recovery, staging-first restart orchestration.</p>
-          <div class="tools-list">
-            <span class="tool-tag">restart_payment_service</span>
-          </div>
-          <div class="card-footer">
-            <span class="footer-meta">Policy: Staging Enforced</span>
-            <span class="latency-pill">41ms</span>
+        <!-- Hierarchy Connector Stems -->
+        <div class="tree-connectors" aria-hidden="true">
+          <div class="connector-stem main-stem"></div>
+          <div class="connector-branches">
+            <div class="branch-line branch-left"></div>
+            <div class="branch-line branch-center"></div>
+            <div class="branch-line branch-right"></div>
           </div>
         </div>
 
-        <!-- Database MCP Card -->
-        <div class="glass-card service-card" id="cardDatabase">
-          <div class="card-top">
-            <div class="service-identity">
-              <svg class="service-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                <ellipse cx="12" cy="5" rx="9" ry="3"/>
-                <path d="M3 5V19A9 3 0 0 0 21 19V5"/>
-                <path d="M3 12A9 3 0 0 0 21 12"/>
-              </svg>
-              <div>
-                <h3 class="service-name">Database MCP</h3>
-                <span class="service-sub">State & Lock Inspector</span>
+        <!-- Subordinate / Governed Microservices Grid -->
+        <div class="subordinate-grid">
+          
+          <!-- Governed Node 1: Diagnostic MCP -->
+          <div class="glass-card subordinate-card" id="cardDiagnostic">
+            <div class="subordinate-header">
+              <div class="subordinate-identity">
+                <svg class="subordinate-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <circle cx="11" cy="11" r="8"/>
+                  <path d="m21 21-4.3-4.3"/>
+                </svg>
+                <div>
+                  <h4 class="subordinate-name">Diagnostic MCP</h4>
+                  <span class="subordinate-sub">Telemetry Subtree (/steps/[0])</span>
+                </div>
               </div>
+              <span class="badge badge-subtle">Subordinate</span>
             </div>
-            <span class="badge badge-subtle">Isolated</span>
+            <p class="subordinate-desc">Read-only container logs & metric telemetry inspection.</p>
+            <div class="tools-list">
+              <span class="tool-tag">fetch_system_logs</span>
+              <span class="tool-tag">query_metrics</span>
+            </div>
+            <div class="subordinate-footer">
+              <span class="footer-meta">Scope: Diagnostic Only</span>
+              <span class="latency-pill">38ms</span>
+            </div>
           </div>
-          <p class="service-desc">Database lock table inspection and state snapshot querying.</p>
-          <div class="tools-list">
-            <span class="tool-tag">read_lock_snapshot</span>
+
+          <!-- Governed Node 2: Remediation MCP -->
+          <div class="glass-card subordinate-card" id="cardRemediation">
+            <div class="subordinate-header">
+              <div class="subordinate-identity">
+                <svg class="subordinate-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+                </svg>
+                <div>
+                  <h4 class="subordinate-name">Remediation MCP</h4>
+                  <span class="subordinate-sub">Recovery Subtree (/steps/[2])</span>
+                </div>
+              </div>
+              <span class="badge badge-subtle">Subordinate</span>
+            </div>
+            <p class="subordinate-desc">Automated container recovery, staging-first execution bounds.</p>
+            <div class="tools-list">
+              <span class="tool-tag">restart_payment_service</span>
+            </div>
+            <div class="subordinate-footer">
+              <span class="footer-meta">Policy: Staging Enforced</span>
+              <span class="latency-pill">41ms</span>
+            </div>
           </div>
-          <div class="card-footer">
-            <span class="footer-meta">Isolation: Cross-Pivot Blocked</span>
-            <span class="latency-pill">44ms</span>
+
+          <!-- Governed Node 3: Database MCP -->
+          <div class="glass-card subordinate-card" id="cardDatabase">
+            <div class="subordinate-header">
+              <div class="subordinate-identity">
+                <svg class="subordinate-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <ellipse cx="12" cy="5" rx="9" ry="3"/>
+                  <path d="M3 5V19A9 3 0 0 0 21 19V5"/>
+                  <path d="M3 12A9 3 0 0 0 21 12"/>
+                </svg>
+                <div>
+                  <h4 class="subordinate-name">Database MCP</h4>
+                  <span class="subordinate-sub">Isolated Subsystem</span>
+                </div>
+              </div>
+              <span class="badge badge-subtle">Isolated</span>
+            </div>
+            <p class="subordinate-desc">Database lock table state inspection, sandboxed boundary.</p>
+            <div class="tools-list">
+              <span class="tool-tag">read_lock_snapshot</span>
+            </div>
+            <div class="subordinate-footer">
+              <span class="footer-meta">Cross-Pivot: Blocked</span>
+              <span class="latency-pill">44ms</span>
+            </div>
           </div>
+
         </div>
+
       </div>
 
     </section>

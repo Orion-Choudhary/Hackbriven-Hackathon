@@ -142,12 +142,16 @@ document.addEventListener('DOMContentLoaded', () => {
     if (tokenIdText) tokenIdText.textContent = `Token: #${id.slice(0, 8)}`;
     if (trustTokenBadge) trustTokenBadge.style.borderColor = 'rgba(255, 255, 255, 0.16)';
   }
-
-  function showVerdict(policy) {
+    function showVerdict(policy) {
     if (!verdictCard) return;
     verdictCard.style.display = 'block';
 
-    if (policy.blocked) {
+    if (policy.held) {
+      verdictCard.className = 'verdict-card hold';
+      if (verdictBadge) verdictBadge.textContent = 'POLICY HOLD';
+      if (verdictTitle) verdictTitle.textContent = 'ArmorIQ Policy Hold: Human Cryptographic Sign-Off Required';
+      if (verdictBody) verdictBody.innerHTML = `<code>${escapeHtml(policy.reason)}</code>`;
+    } else if (policy.blocked) {
       verdictCard.className = 'verdict-card';
       if (verdictBadge) verdictBadge.textContent = policy.status || '403 FORBIDDEN';
       if (verdictTitle) verdictTitle.textContent = 'Zero-Trust Policy Intercept: Unauthorized Action Blocked';
@@ -162,6 +166,44 @@ document.addEventListener('DOMContentLoaded', () => {
       if (verdictBadge) verdictBadge.textContent = policy.status || '200 OK';
       if (verdictTitle) verdictTitle.textContent = 'Cryptographic Intent Verified — Action Permitted';
       if (verdictBody) verdictBody.innerHTML = `<code>${escapeHtml(policy.reason)}</code>`;
+    }
+  }
+
+  // ========= Live Mock Environment State Management =========
+  async function fetchEnvironmentState() {
+    const data = await apiGet('/api/environment');
+    if (data && data.environment) {
+      updateEnvironmentWidget(data.environment);
+    }
+  }
+
+  function updateEnvironmentWidget(env) {
+    const widget = document.getElementById('envStatusWidget');
+    const badge = document.getElementById('envBadgeStatus');
+    const latencyEl = document.getElementById('envLatencyVal');
+    const errorEl = document.getElementById('envErrorVal');
+    const restartEl = document.getElementById('envRestartVal');
+
+    if (!widget) return;
+
+    const isHealthy = env.status === 'HEALTHY';
+    widget.className = `env-status-widget ${isHealthy ? 'healthy' : 'degraded'}`;
+
+    if (badge) {
+      badge.textContent = env.status;
+      badge.className = `env-badge-status ${isHealthy ? 'healthy' : 'degraded'}`;
+    }
+    if (latencyEl) latencyEl.textContent = `${env.latency_p99_ms}ms`;
+    if (errorEl) errorEl.textContent = `${(env.error_rate * 100).toFixed(1)}%`;
+    if (restartEl) restartEl.textContent = env.restart_count;
+  }
+
+  async function apiGet(endpoint) {
+    try {
+      const resp = await fetch(endpoint);
+      return await resp.json();
+    } catch (err) {
+      return null;
     }
   }
 
@@ -253,6 +295,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // ========= Pre-Built Scenarios =========
   async function runScenario(type) {
     clearFeed();
+
+    if (type === 'hitl-approval') {
+      return runHITLScenario();
+    }
 
     const endpoint = `/api/simulate/${type}`;
 
@@ -357,6 +403,226 @@ document.addEventListener('DOMContentLoaded', () => {
     showVerdict(policy);
   }
 
+  // ========= Scenario 4: Human-in-the-Loop (HITL) Workflow =========
+  async function runHITLScenario() {
+    if (promptInput) promptInput.value = 'Remediate critical production payment outage with human sign-off';
+    setToken('hitl-hold-9b4c2');
+
+    // Reset environment to degraded for clean demo
+    await apiPost('/api/environment/reset');
+    await fetchEnvironmentState();
+
+    await appendStep({
+      agent: 'Commander',
+      role: 'commander',
+      narration: 'CRITICAL ALERT INC-9042: Production Payment Cluster degraded (latency > 8200ms, error rate 12%). Remediation Agent requested emergency recovery.',
+      delay: 100,
+    });
+
+    showLoading('NVIDIA Nemotron 3.5 is formulating emergency production remediation plan...');
+
+    const data = await apiPost('/api/simulate/hitl-approval');
+    removeLoading();
+
+    if (!data || !data.nemotron) {
+      await appendStep({
+        agent: 'System',
+        role: 'gateway',
+        narration: 'Backend service failed to evaluate HITL workflow.',
+        delay: 100,
+      });
+      return;
+    }
+
+    const nem = data.nemotron;
+    const hold = data.hold || {};
+    const policy = data.policy || { held: true, status: 'POLICY HOLD', reason: 'High-impact production action held.' };
+
+    await appendStep({
+      agent: 'Nemotron Autonomous Reasoner',
+      role: 'remediation',
+      narration: 'Nemotron evaluated production outage telemetry and requested high-impact restart:',
+      nemotron: {
+        model: nem.model,
+        latency: `${nem.latency_seconds}s`,
+        text: nem.reasoning,
+      },
+      delay: 200,
+    });
+
+    await appendStep({
+      agent: 'Remediation Agent',
+      role: 'remediation',
+      narration: `Remediation Agent dispatched high-impact call: ${hold.mcp}.${hold.action}`,
+      toolCall: `${hold.mcp}.${hold.action}(${JSON.stringify(hold.params)})`,
+      delay: 250,
+    });
+
+    await appendStep({
+      agent: 'ArmorIQ Policy Evaluator',
+      role: 'gateway',
+      narration: `HOLD TRIGGERED: Action suspended. ArmorIQ delegation request created: #${(hold.delegation_id || 'delg-0').slice(0, 8)}. Awaiting human SRE authorization.`,
+      delay: 250,
+    });
+
+    showVerdict(policy);
+
+    // Render the Interactive Approval Panel
+    renderApprovalPanel(hold);
+  }
+
+  function renderApprovalPanel(hold) {
+    if (!streamContainer) return;
+
+    const panelEl = document.createElement('div');
+    panelEl.className = 'approval-panel';
+    panelEl.id = `approvalPanel_${hold.hold_id}`;
+
+    panelEl.innerHTML = `
+      <div class="approval-panel-header">
+        <div class="approval-panel-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <path d="m9 12 2 2 4-4"/>
+          </svg>
+          HUMAN-IN-THE-LOOP AUTHORIZATION REQUIRED
+        </div>
+        <span class="approval-engine-tag">ArmorIQ Delegation Engine</span>
+      </div>
+
+      <div class="approval-grid">
+        <div class="approval-item">
+          <span class="approval-label">Requested Tool</span>
+          <span class="approval-val">${escapeHtml(hold.mcp)}.${escapeHtml(hold.action)}</span>
+        </div>
+        <div class="approval-item">
+          <span class="approval-label">Target Environment</span>
+          <span class="approval-val warn">PRODUCTION (force=true)</span>
+        </div>
+        <div class="approval-item">
+          <span class="approval-label">ArmorIQ Policy State</span>
+          <span class="approval-val hold">HOLD — HUMAN APPROVAL REQUIRED</span>
+        </div>
+        <div class="approval-item">
+          <span class="approval-label">Delegation Reference</span>
+          <span class="approval-val">#${escapeHtml((hold.delegation_id || 'delg-0').slice(0, 12))}</span>
+        </div>
+      </div>
+
+      <div class="approval-input-group">
+        <span class="approval-label">Operator Identity (Sign-Off Attribution)</span>
+        <input type="email" class="approver-input" id="approverEmailInput" value="sre-operator@finsecure.com" placeholder="approver@finsecure.com" />
+      </div>
+
+      <div class="approval-actions">
+        <button class="btn-approve" id="btnApproveAction">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          APPROVE & EXECUTE VIA ARMORIQ
+        </button>
+        <button class="btn-deny" id="btnDenyAction">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+          REJECT DELEGATION
+        </button>
+      </div>
+    `;
+
+    streamContainer.appendChild(panelEl);
+    streamContainer.scrollTop = streamContainer.scrollHeight;
+
+    const btnApprove = panelEl.querySelector('#btnApproveAction');
+    const btnDeny = panelEl.querySelector('#btnDenyAction');
+    const emailInput = panelEl.querySelector('#approverEmailInput');
+
+    btnApprove?.addEventListener('click', async () => {
+      btnApprove.disabled = true;
+      btnDeny.disabled = true;
+      btnApprove.textContent = 'Verifying & Executing...';
+
+      const email = emailInput?.value.trim() || 'sre-operator@finsecure.com';
+      const result = await apiPost('/api/approve', {
+        hold_id: hold.hold_id,
+        decision: 'approve',
+        approver_email: email,
+      });
+
+      panelEl.style.opacity = '0.6';
+      panelEl.style.pointerEvents = 'none';
+
+      await appendStep({
+        agent: 'Human SRE Operator',
+        role: 'commander',
+        narration: `Operator (${email}) signed cryptographic approval for delegation #${(hold.delegation_id || '').slice(0, 8)}.`,
+        delay: 150,
+      });
+
+      await appendStep({
+        agent: 'ArmorIQ Zero-Trust Proxy',
+        role: 'gateway',
+        narration: `Delegation confirmed approved by ArmorIQ. Resuming authorized execution: ${hold.mcp}.${hold.action}...`,
+        toolCall: `${hold.mcp}.${hold.action}(environment="production", force=true)`,
+        delay: 200,
+      });
+
+      await appendStep({
+        agent: 'Render Remediation MCP',
+        role: 'remediation',
+        narration: `200 OK: Production payment container restarted successfully. ArmorIQ mark_delegation_executed() sealed delegation lifecycle.`,
+        delay: 250,
+      });
+
+      if (result && result.environment) {
+        updateEnvironmentWidget(result.environment);
+      }
+
+      showVerdict(result?.policy || {
+        status: '200 OK — REMEDIATION EXECUTED',
+        blocked: False,
+        reason: 'ArmorIQ authorized restart on production cluster post-approval.',
+      });
+    });
+
+    btnDeny?.addEventListener('click', async () => {
+      btnApprove.disabled = true;
+      btnDeny.disabled = true;
+      btnDeny.textContent = 'Rejecting...';
+
+      const email = emailInput?.value.trim() || 'sre-operator@finsecure.com';
+      const result = await apiPost('/api/approve', {
+        hold_id: hold.hold_id,
+        decision: 'deny',
+        approver_email: email,
+      });
+
+      panelEl.style.opacity = '0.6';
+      panelEl.style.pointerEvents = 'none';
+
+      await appendStep({
+        agent: 'Human SRE Operator',
+        role: 'commander',
+        narration: `Operator (${email}) REJECTED delegation #${(hold.delegation_id || '').slice(0, 8)}. Action revoked.`,
+        delay: 150,
+      });
+
+      await appendStep({
+        agent: 'ArmorIQ Policy Evaluator',
+        role: 'gateway',
+        narration: 'Delegation rejected. Production restart aborted. Environment remains in current state.',
+        delay: 200,
+      });
+
+      showVerdict(result?.policy || {
+        status: 'DENIED BY OPERATOR',
+        blocked: true,
+        reason: 'Delegation rejected by operator. Production restart cancelled.',
+      });
+    });
+  }
+
   // ========= Full Security Matrix =========
   async function runSecurityMatrix() {
     clearFeed();
@@ -402,6 +668,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Instant auto-run on page load
+  // Initial load
+  fetchEnvironmentState();
   runScenario('prompt-injection');
 });

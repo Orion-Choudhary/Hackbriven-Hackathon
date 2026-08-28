@@ -1,0 +1,326 @@
+#!/usr/bin/env python3
+"""Build self-contained index.html from style.css, HTML body template, and app.js."""
+from pathlib import Path
+
+FRONTEND_DIR = Path(__file__).resolve().parent
+
+style_content = (FRONTEND_DIR / "style.css").read_text(encoding="utf-8").strip()
+app_content = (FRONTEND_DIR / "app.js").read_text(encoding="utf-8").strip()
+
+html_template = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>InfraGuard — Autonomous Zero-Trust Incident Response Control Surface</title>
+  <meta name="description" content="Production-grade zero-trust authorization control surface for autonomous SRE agents powered by ArmorIQ and NVIDIA Nemotron.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+{style_content}
+  </style>
+</head>
+<body class="theme-obsidian">
+  <!-- Subtle Ambient Illumination -->
+  <div class="ambient-glow bloom-primary"></div>
+  <div class="ambient-glow bloom-secondary"></div>
+  <div class="dot-grid-canvas"></div>
+
+  <!-- Minimal Top Navigation Bar -->
+  <header class="top-nav">
+    <div class="nav-left">
+      <div class="brand-group">
+        <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          <path d="m9 12 2 2 4-4"/>
+        </svg>
+        <span class="brand-title">InfraGuard</span>
+        <span class="version-badge">v2.5-armoriq</span>
+      </div>
+      <div class="status-pill">
+        <span class="pulse-dot"></span>
+        <span class="pill-text">Zero-Trust Active &bull; OPA Policy Enforced</span>
+      </div>
+    </div>
+    
+    <div class="nav-center">
+      <div class="incident-callout">
+        <span class="incident-id">INC-4821</span>
+        <span class="incident-desc">Payment API Latency Spike (p99: 8.4s)</span>
+      </div>
+    </div>
+
+    <div class="nav-right">
+      <div class="model-pill">
+        <span class="model-tag">NVIDIA Nemotron 3.5</span>
+      </div>
+      <button class="btn-primary" id="btnRunMatrix">
+        <span>⚡ Run Security Matrix</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Viewport Layout -->
+  <main class="main-container">
+    
+    <!-- Left Workspace Column -->
+    <section class="workspace-col">
+      
+      <!-- Hero / Headline Section -->
+      <div class="hero-section">
+        <h1 class="hero-headline">
+          The agent's reasoning can be compromised.<br>
+          <span class="headline-gradient">Its authority cannot.</span>
+        </h1>
+        <p class="hero-subtitle">
+          Cryptographic Intent Verification & Merkle Subtree Delegation for Autonomous Incident Response.
+        </p>
+      </div>
+
+      <!-- Live Mock Production Environment Health Indicator -->
+      <div class="env-status-widget degraded" id="envStatusWidget">
+        <div class="env-indicator-dot"></div>
+        <div class="env-info-group">
+          <span class="env-label-title">FinSecure Production Cluster</span>
+          <span class="env-badge-status degraded" id="envBadgeStatus">DEGRADED</span>
+          <div class="env-metric-item">Latency p99: <span class="env-metric-val" id="envLatencyVal">8200ms</span></div>
+          <div class="env-metric-item">Error Rate: <span class="env-metric-val" id="envErrorVal">12.0%</span></div>
+          <div class="env-metric-item">Restarts: <span class="env-metric-val" id="envRestartVal">0</span></div>
+        </div>
+      </div>
+
+      <!-- Command & Prompt Surface -->
+      <div class="glass-card command-card">
+        <div class="command-input-wrapper">
+          <span class="command-prefix">&gt;</span>
+          <input 
+            type="text" 
+            id="promptInput" 
+            class="command-input" 
+            placeholder="Type an SRE instruction or prompt sub-agents: e.g. Triage FinSecure payment latency outage..."
+            autocomplete="off"
+          />
+          <button id="btnExecutePrompt" class="btn-send" title="Dispatch Instruction">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </button>
+        </div>
+        
+        <!-- Quick Attack & Governance Capability Chips -->
+        <div class="chips-row">
+          <span class="chips-label">Scenario Presets:</span>
+          <button class="chip-btn active" data-scenario="prompt-injection">
+            <span class="chip-num">01</span> Prompt Injection Defense
+          </button>
+          <button class="chip-btn" data-scenario="parameter-tampering">
+            <span class="chip-num">02</span> Parameter Tampering Defense
+          </button>
+          <button class="chip-btn" data-scenario="unauthorized-database">
+            <span class="chip-num">03</span> Cross-MCP Boundary Defense
+          </button>
+          <button class="chip-btn" data-scenario="hitl-approval">
+            <span class="chip-num">04</span> HITL Approval Gate
+          </button>
+        </div>
+      </div>
+
+      <!-- Zero-Trust Governing Architecture Tree -->
+      <div class="section-header">
+        <h2 class="section-title">Zero-Trust Governing Architecture</h2>
+        <span class="section-meta">Root Control Plane &bull; Cryptographic Subtrees</span>
+      </div>
+
+      <div class="governance-tree" id="governanceTree">
+        
+        <!-- Master Authority / Governing Gateway Node -->
+        <div class="glass-card master-node" id="masterGatewayNode">
+          <div class="master-header">
+            <div class="master-identity">
+              <svg class="master-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                <path d="m9 12 2 2 4-4"/>
+              </svg>
+              <div>
+                <h3 class="master-title">Commander & ArmorIQ Zero-Trust Gateway</h3>
+                <span class="master-subtitle">Governing Root Authority &bull; Cryptographic Merkle Root Proofs</span>
+              </div>
+            </div>
+            <span class="badge-governor">Master Control Plane</span>
+          </div>
+          <p class="master-desc">
+            Enforces policy constraints, mints signed CSRG Root Intent Tokens, and cryptographically delegates isolated subtrees to subordinate MCP microservices.
+          </p>
+          <div class="master-footer">
+            <span class="master-pill">Policy: OPA Active</span>
+            <span class="master-pill">CSRG Merkle Verification</span>
+            <span class="master-pill">Micro-Segmentation: Strict</span>
+            <span class="master-pill">HITL Delegation Engine</span>
+          </div>
+        </div>
+
+        <!-- Hierarchy Connector Stems -->
+        <div class="tree-connectors" aria-hidden="true">
+          <div class="connector-stem"></div>
+          <div class="connector-branches">
+            <div class="branch-center"></div>
+          </div>
+        </div>
+
+        <!-- Subordinate / Governed Microservices Grid -->
+        <div class="subordinate-grid">
+          
+          <!-- Governed Node 1: Diagnostic MCP -->
+          <div class="glass-card subordinate-card" id="cardDiagnostic">
+            <div class="subordinate-header">
+              <div class="subordinate-identity">
+                <svg class="subordinate-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <circle cx="11" cy="11" r="8"/>
+                  <path d="m21 21-4.3-4.3"/>
+                </svg>
+                <div>
+                  <h4 class="subordinate-name">Diagnostic MCP</h4>
+                  <span class="subordinate-sub">Telemetry Subtree (/steps/[0])</span>
+                </div>
+              </div>
+              <span class="badge-subtle">Subordinate</span>
+            </div>
+            <p class="subordinate-desc">Read-only container logs & metric telemetry inspection.</p>
+            <div class="tools-list">
+              <span class="tool-tag">fetch_system_logs</span>
+              <span class="tool-tag">query_metrics</span>
+            </div>
+            <div class="subordinate-footer">
+              <span class="footer-meta">Scope: Diagnostic Only</span>
+              <span class="latency-pill">38ms</span>
+            </div>
+          </div>
+
+          <!-- Governed Node 2: Remediation MCP -->
+          <div class="glass-card subordinate-card" id="cardRemediation">
+            <div class="subordinate-header">
+              <div class="subordinate-identity">
+                <svg class="subordinate-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+                </svg>
+                <div>
+                  <h4 class="subordinate-name">Remediation MCP</h4>
+                  <span class="subordinate-sub">Recovery Subtree (/steps/[2])</span>
+                </div>
+              </div>
+              <span class="badge-subtle">Subordinate</span>
+            </div>
+            <p class="subordinate-desc">Automated container recovery, staging-first execution bounds.</p>
+            <div class="tools-list">
+              <span class="tool-tag">restart_payment_service</span>
+            </div>
+            <div class="subordinate-footer">
+              <span class="footer-meta">Policy: Staging Enforced</span>
+              <span class="latency-pill">41ms</span>
+            </div>
+          </div>
+
+          <!-- Governed Node 3: Database MCP -->
+          <div class="glass-card subordinate-card" id="cardDatabase">
+            <div class="subordinate-header">
+              <div class="subordinate-identity">
+                <svg class="subordinate-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <ellipse cx="12" cy="5" rx="9" ry="3"/>
+                  <path d="M3 5V19A9 3 0 0 0 21 19V5"/>
+                  <path d="M3 12A9 3 0 0 0 21 12"/>
+                </svg>
+                <div>
+                  <h4 class="subordinate-name">Database MCP</h4>
+                  <span class="subordinate-sub">Isolated Subsystem</span>
+                </div>
+              </div>
+              <span class="badge-subtle">Isolated</span>
+            </div>
+            <p class="subordinate-desc">Database lock table state inspection, sandboxed boundary.</p>
+            <div class="tools-list">
+              <span class="tool-tag">read_lock_snapshot</span>
+            </div>
+            <div class="subordinate-footer">
+              <span class="footer-meta">Cross-Pivot: Blocked</span>
+              <span class="latency-pill">44ms</span>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- Right-Hand Rail: Agent Transparency & Audit Stream -->
+    <aside class="transparency-rail">
+      <div class="glass-card transparency-panel" id="transparencyPanel">
+        
+        <div class="panel-header">
+          <div class="panel-title-group">
+            <svg class="panel-header-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+              <polyline points="10 9 9 9 8 9"/>
+            </svg>
+            <div>
+              <h2 class="panel-title">Live Zero-Trust Audit Stream</h2>
+              <span class="panel-subtitle">Real-Time Cryptographic Chain of Custody</span>
+            </div>
+          </div>
+          <div class="panel-controls">
+            <div class="trust-token-badge" id="trustTokenBadge">
+              <svg class="token-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <circle cx="8" cy="15" r="4"/>
+                <path d="m10.85 12.15 7.65-7.65a1.5 1.5 0 0 1 2.12 0l1.41 1.41a1.5 1.5 0 0 1 0 2.12l-7.65 7.65"/>
+                <path d="m14 7 3 3"/>
+              </svg>
+              <span class="token-id" id="tokenIdText">Token: Idle</span>
+            </div>
+            <button class="btn-clear" id="btnClearLogs">Clear</button>
+          </div>
+        </div>
+
+        <!-- Live Step Stream Container -->
+        <div class="stream-container" id="streamContainer">
+          <div class="empty-state" id="emptyState">
+            <div class="radar-scan"></div>
+            <p class="empty-title">Audit Feed Ready</p>
+            <p class="empty-subtitle">
+              Sub-agents dormant with zero standing privileges.<br>
+              Cryptographic intent tokens will mint upon incident intake.
+            </p>
+          </div>
+        </div>
+
+        <!-- Cryptographic Policy Verdict Drawer -->
+        <div class="verdict-card" id="verdictCard" style="display: none;">
+          <div class="verdict-header">
+            <div class="verdict-main">
+              <span class="verdict-badge" id="verdictBadge">403 FORBIDDEN</span>
+              <span class="verdict-title" id="verdictTitle">Zero-Trust Intercept Result</span>
+            </div>
+            <span class="verdict-engine">ArmorIQ OPA Engine v0.68.0</span>
+          </div>
+          <div class="verdict-body" id="verdictBody">
+            <!-- Dynamic enforcement description -->
+          </div>
+        </div>
+
+      </div>
+    </aside>
+
+  </main>
+
+  <script>
+{app_content}
+  </script>
+</body>
+</html>
+"""
+
+(FRONTEND_DIR / "index.html").write_text(html_template, encoding="utf-8")
+print(f"Successfully generated self-contained index.html ({len(html_template)} bytes)")

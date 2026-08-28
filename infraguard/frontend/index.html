@@ -946,6 +946,261 @@ body {
   line-height: 1.4;
 }
 
+.verdict-card.hold {
+  border-color: rgba(251, 191, 36, 0.35);
+  background: rgba(251, 191, 36, 0.06);
+}
+
+.verdict-card.hold .verdict-badge {
+  background: rgba(251, 191, 36, 0.15);
+  color: #FBBF24;
+  border-color: rgba(251, 191, 36, 0.35);
+}
+
+/* Human-in-the-Loop (HITL) Interactive Approval Panel */
+.approval-panel {
+  margin-top: 10px;
+  padding: 14px 16px;
+  border-radius: var(--radius-sm);
+  background: rgba(251, 191, 36, 0.04);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  box-shadow: 0 8px 24px rgba(251, 191, 36, 0.08);
+  animation: slideFadeIn 0.25s ease forwards;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.approval-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.approval-panel-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #FBBF24;
+  letter-spacing: 0.02em;
+}
+
+.approval-engine-tag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.approval-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.approval-item {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-xs);
+  padding: 6px 10px;
+}
+
+.approval-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 2px;
+  display: block;
+}
+
+.approval-val {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.approval-val.warn {
+  color: #F87171;
+  font-weight: 600;
+}
+
+.approval-val.hold {
+  color: #FBBF24;
+}
+
+.approval-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.approver-input {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-xs);
+  padding: 6px 10px;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.approver-input:focus {
+  border-color: var(--accent-subtle);
+}
+
+.approval-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.btn-approve {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #34D399;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 8px 12px;
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.btn-approve:hover {
+  background: rgba(16, 185, 129, 0.28);
+  border-color: #34D399;
+  color: #FFFFFF;
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.3);
+  transform: translateY(-1px);
+}
+
+.btn-deny {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: rgba(244, 63, 94, 0.12);
+  border: 1px solid rgba(244, 63, 94, 0.3);
+  color: #FB7185;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 8px 12px;
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.btn-deny:hover {
+  background: rgba(244, 63, 94, 0.25);
+  border-color: #FB7185;
+  color: #FFFFFF;
+  box-shadow: 0 0 16px rgba(244, 63, 94, 0.3);
+  transform: translateY(-1px);
+}
+
+/* Mock Environment Live Health Indicator */
+.env-status-widget {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 8px 14px;
+  margin-bottom: 14px;
+  transition: all 0.3s ease;
+}
+
+.env-status-widget.degraded {
+  border-color: rgba(244, 63, 94, 0.35);
+  background: rgba(244, 63, 94, 0.05);
+}
+
+.env-status-widget.healthy {
+  border-color: rgba(52, 211, 153, 0.35);
+  background: rgba(52, 211, 153, 0.05);
+  box-shadow: 0 0 20px rgba(52, 211, 153, 0.08);
+}
+
+.env-indicator-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #71717A;
+}
+
+.env-status-widget.degraded .env-indicator-dot {
+  background: #F43F5E;
+  box-shadow: 0 0 10px #F43F5E;
+  animation: pulseOpacity 1.2s infinite ease-in-out;
+}
+
+.env-status-widget.healthy .env-indicator-dot {
+  background: #10B981;
+  box-shadow: 0 0 10px #10B981;
+}
+
+.env-info-group {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+}
+
+.env-label-title {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.env-badge-status {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: var(--radius-xs);
+}
+
+.env-badge-status.degraded {
+  background: rgba(244, 63, 94, 0.15);
+  color: #FB7185;
+  border: 1px solid rgba(244, 63, 94, 0.3);
+}
+
+.env-badge-status.healthy {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34D399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.env-metric-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--text-muted);
+}
+
+.env-metric-val {
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
 /* Responsive */
 @media (max-width: 992px) {
   .main-container {
@@ -965,7 +1220,7 @@ body {
     min-height: 400px;
   }
 }
-</style>
+  </style>
 </head>
 <body class="theme-obsidian">
   <!-- Subtle Ambient Illumination -->
@@ -982,7 +1237,7 @@ body {
           <path d="m9 12 2 2 4-4"/>
         </svg>
         <span class="brand-title">InfraGuard</span>
-        <span class="version-badge">v2.4-armoriq</span>
+        <span class="version-badge">v2.5-armoriq</span>
       </div>
       <div class="status-pill">
         <span class="pulse-dot"></span>
@@ -1002,7 +1257,7 @@ body {
         <span class="model-tag">NVIDIA Nemotron 3.5</span>
       </div>
       <button class="btn-primary" id="btnRunMatrix">
-        <span>Run Security Benchmark</span>
+        <span>⚡ Run Security Matrix</span>
       </button>
     </div>
   </header>
@@ -1024,6 +1279,18 @@ body {
         </p>
       </div>
 
+      <!-- Live Mock Production Environment Health Indicator -->
+      <div class="env-status-widget degraded" id="envStatusWidget">
+        <div class="env-indicator-dot"></div>
+        <div class="env-info-group">
+          <span class="env-label-title">FinSecure Production Cluster</span>
+          <span class="env-badge-status degraded" id="envBadgeStatus">DEGRADED</span>
+          <div class="env-metric-item">Latency p99: <span class="env-metric-val" id="envLatencyVal">8200ms</span></div>
+          <div class="env-metric-item">Error Rate: <span class="env-metric-val" id="envErrorVal">12.0%</span></div>
+          <div class="env-metric-item">Restarts: <span class="env-metric-val" id="envRestartVal">0</span></div>
+        </div>
+      </div>
+
       <!-- Command & Prompt Surface -->
       <div class="glass-card command-card">
         <div class="command-input-wrapper">
@@ -1042,9 +1309,9 @@ body {
           </button>
         </div>
         
-        <!-- Quick Attack Capability Chips -->
+        <!-- Quick Attack & Governance Capability Chips -->
         <div class="chips-row">
-          <span class="chips-label">Attack Presets:</span>
+          <span class="chips-label">Scenario Presets:</span>
           <button class="chip-btn active" data-scenario="prompt-injection">
             <span class="chip-num">01</span> Prompt Injection Defense
           </button>
@@ -1053,6 +1320,9 @@ body {
           </button>
           <button class="chip-btn" data-scenario="unauthorized-database">
             <span class="chip-num">03</span> Cross-MCP Boundary Defense
+          </button>
+          <button class="chip-btn" data-scenario="hitl-approval">
+            <span class="chip-num">04</span> HITL Approval Gate
           </button>
         </div>
       </div>
@@ -1087,6 +1357,7 @@ body {
             <span class="master-pill">Policy: OPA Active</span>
             <span class="master-pill">CSRG Merkle Verification</span>
             <span class="master-pill">Micro-Segmentation: Strict</span>
+            <span class="master-pill">HITL Delegation Engine</span>
           </div>
         </div>
 
@@ -1390,12 +1661,16 @@ document.addEventListener('DOMContentLoaded', () => {
     if (tokenIdText) tokenIdText.textContent = `Token: #${id.slice(0, 8)}`;
     if (trustTokenBadge) trustTokenBadge.style.borderColor = 'rgba(255, 255, 255, 0.16)';
   }
-
-  function showVerdict(policy) {
+    function showVerdict(policy) {
     if (!verdictCard) return;
     verdictCard.style.display = 'block';
 
-    if (policy.blocked) {
+    if (policy.held) {
+      verdictCard.className = 'verdict-card hold';
+      if (verdictBadge) verdictBadge.textContent = 'POLICY HOLD';
+      if (verdictTitle) verdictTitle.textContent = 'ArmorIQ Policy Hold: Human Cryptographic Sign-Off Required';
+      if (verdictBody) verdictBody.innerHTML = `<code>${escapeHtml(policy.reason)}</code>`;
+    } else if (policy.blocked) {
       verdictCard.className = 'verdict-card';
       if (verdictBadge) verdictBadge.textContent = policy.status || '403 FORBIDDEN';
       if (verdictTitle) verdictTitle.textContent = 'Zero-Trust Policy Intercept: Unauthorized Action Blocked';
@@ -1410,6 +1685,44 @@ document.addEventListener('DOMContentLoaded', () => {
       if (verdictBadge) verdictBadge.textContent = policy.status || '200 OK';
       if (verdictTitle) verdictTitle.textContent = 'Cryptographic Intent Verified — Action Permitted';
       if (verdictBody) verdictBody.innerHTML = `<code>${escapeHtml(policy.reason)}</code>`;
+    }
+  }
+
+  // ========= Live Mock Environment State Management =========
+  async function fetchEnvironmentState() {
+    const data = await apiGet('/api/environment');
+    if (data && data.environment) {
+      updateEnvironmentWidget(data.environment);
+    }
+  }
+
+  function updateEnvironmentWidget(env) {
+    const widget = document.getElementById('envStatusWidget');
+    const badge = document.getElementById('envBadgeStatus');
+    const latencyEl = document.getElementById('envLatencyVal');
+    const errorEl = document.getElementById('envErrorVal');
+    const restartEl = document.getElementById('envRestartVal');
+
+    if (!widget) return;
+
+    const isHealthy = env.status === 'HEALTHY';
+    widget.className = `env-status-widget ${isHealthy ? 'healthy' : 'degraded'}`;
+
+    if (badge) {
+      badge.textContent = env.status;
+      badge.className = `env-badge-status ${isHealthy ? 'healthy' : 'degraded'}`;
+    }
+    if (latencyEl) latencyEl.textContent = `${env.latency_p99_ms}ms`;
+    if (errorEl) errorEl.textContent = `${(env.error_rate * 100).toFixed(1)}%`;
+    if (restartEl) restartEl.textContent = env.restart_count;
+  }
+
+  async function apiGet(endpoint) {
+    try {
+      const resp = await fetch(endpoint);
+      return await resp.json();
+    } catch (err) {
+      return null;
     }
   }
 
@@ -1501,6 +1814,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // ========= Pre-Built Scenarios =========
   async function runScenario(type) {
     clearFeed();
+
+    if (type === 'hitl-approval') {
+      return runHITLScenario();
+    }
 
     const endpoint = `/api/simulate/${type}`;
 
@@ -1605,6 +1922,226 @@ document.addEventListener('DOMContentLoaded', () => {
     showVerdict(policy);
   }
 
+  // ========= Scenario 4: Human-in-the-Loop (HITL) Workflow =========
+  async function runHITLScenario() {
+    if (promptInput) promptInput.value = 'Remediate critical production payment outage with human sign-off';
+    setToken('hitl-hold-9b4c2');
+
+    // Reset environment to degraded for clean demo
+    await apiPost('/api/environment/reset');
+    await fetchEnvironmentState();
+
+    await appendStep({
+      agent: 'Commander',
+      role: 'commander',
+      narration: 'CRITICAL ALERT INC-9042: Production Payment Cluster degraded (latency > 8200ms, error rate 12%). Remediation Agent requested emergency recovery.',
+      delay: 100,
+    });
+
+    showLoading('NVIDIA Nemotron 3.5 is formulating emergency production remediation plan...');
+
+    const data = await apiPost('/api/simulate/hitl-approval');
+    removeLoading();
+
+    if (!data || !data.nemotron) {
+      await appendStep({
+        agent: 'System',
+        role: 'gateway',
+        narration: 'Backend service failed to evaluate HITL workflow.',
+        delay: 100,
+      });
+      return;
+    }
+
+    const nem = data.nemotron;
+    const hold = data.hold || {};
+    const policy = data.policy || { held: true, status: 'POLICY HOLD', reason: 'High-impact production action held.' };
+
+    await appendStep({
+      agent: 'Nemotron Autonomous Reasoner',
+      role: 'remediation',
+      narration: 'Nemotron evaluated production outage telemetry and requested high-impact restart:',
+      nemotron: {
+        model: nem.model,
+        latency: `${nem.latency_seconds}s`,
+        text: nem.reasoning,
+      },
+      delay: 200,
+    });
+
+    await appendStep({
+      agent: 'Remediation Agent',
+      role: 'remediation',
+      narration: `Remediation Agent dispatched high-impact call: ${hold.mcp}.${hold.action}`,
+      toolCall: `${hold.mcp}.${hold.action}(${JSON.stringify(hold.params)})`,
+      delay: 250,
+    });
+
+    await appendStep({
+      agent: 'ArmorIQ Policy Evaluator',
+      role: 'gateway',
+      narration: `HOLD TRIGGERED: Action suspended. ArmorIQ delegation request created: #${(hold.delegation_id || 'delg-0').slice(0, 8)}. Awaiting human SRE authorization.`,
+      delay: 250,
+    });
+
+    showVerdict(policy);
+
+    // Render the Interactive Approval Panel
+    renderApprovalPanel(hold);
+  }
+
+  function renderApprovalPanel(hold) {
+    if (!streamContainer) return;
+
+    const panelEl = document.createElement('div');
+    panelEl.className = 'approval-panel';
+    panelEl.id = `approvalPanel_${hold.hold_id}`;
+
+    panelEl.innerHTML = `
+      <div class="approval-panel-header">
+        <div class="approval-panel-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <path d="m9 12 2 2 4-4"/>
+          </svg>
+          HUMAN-IN-THE-LOOP AUTHORIZATION REQUIRED
+        </div>
+        <span class="approval-engine-tag">ArmorIQ Delegation Engine</span>
+      </div>
+
+      <div class="approval-grid">
+        <div class="approval-item">
+          <span class="approval-label">Requested Tool</span>
+          <span class="approval-val">${escapeHtml(hold.mcp)}.${escapeHtml(hold.action)}</span>
+        </div>
+        <div class="approval-item">
+          <span class="approval-label">Target Environment</span>
+          <span class="approval-val warn">PRODUCTION (force=true)</span>
+        </div>
+        <div class="approval-item">
+          <span class="approval-label">ArmorIQ Policy State</span>
+          <span class="approval-val hold">HOLD — HUMAN APPROVAL REQUIRED</span>
+        </div>
+        <div class="approval-item">
+          <span class="approval-label">Delegation Reference</span>
+          <span class="approval-val">#${escapeHtml((hold.delegation_id || 'delg-0').slice(0, 12))}</span>
+        </div>
+      </div>
+
+      <div class="approval-input-group">
+        <span class="approval-label">Operator Identity (Sign-Off Attribution)</span>
+        <input type="email" class="approver-input" id="approverEmailInput" value="sre-operator@finsecure.com" placeholder="approver@finsecure.com" />
+      </div>
+
+      <div class="approval-actions">
+        <button class="btn-approve" id="btnApproveAction">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          APPROVE & EXECUTE VIA ARMORIQ
+        </button>
+        <button class="btn-deny" id="btnDenyAction">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+          REJECT DELEGATION
+        </button>
+      </div>
+    `;
+
+    streamContainer.appendChild(panelEl);
+    streamContainer.scrollTop = streamContainer.scrollHeight;
+
+    const btnApprove = panelEl.querySelector('#btnApproveAction');
+    const btnDeny = panelEl.querySelector('#btnDenyAction');
+    const emailInput = panelEl.querySelector('#approverEmailInput');
+
+    btnApprove?.addEventListener('click', async () => {
+      btnApprove.disabled = true;
+      btnDeny.disabled = true;
+      btnApprove.textContent = 'Verifying & Executing...';
+
+      const email = emailInput?.value.trim() || 'sre-operator@finsecure.com';
+      const result = await apiPost('/api/approve', {
+        hold_id: hold.hold_id,
+        decision: 'approve',
+        approver_email: email,
+      });
+
+      panelEl.style.opacity = '0.6';
+      panelEl.style.pointerEvents = 'none';
+
+      await appendStep({
+        agent: 'Human SRE Operator',
+        role: 'commander',
+        narration: `Operator (${email}) signed cryptographic approval for delegation #${(hold.delegation_id || '').slice(0, 8)}.`,
+        delay: 150,
+      });
+
+      await appendStep({
+        agent: 'ArmorIQ Zero-Trust Proxy',
+        role: 'gateway',
+        narration: `Delegation confirmed approved by ArmorIQ. Resuming authorized execution: ${hold.mcp}.${hold.action}...`,
+        toolCall: `${hold.mcp}.${hold.action}(environment="production", force=true)`,
+        delay: 200,
+      });
+
+      await appendStep({
+        agent: 'Render Remediation MCP',
+        role: 'remediation',
+        narration: `200 OK: Production payment container restarted successfully. ArmorIQ mark_delegation_executed() sealed delegation lifecycle.`,
+        delay: 250,
+      });
+
+      if (result && result.environment) {
+        updateEnvironmentWidget(result.environment);
+      }
+
+      showVerdict(result?.policy || {
+        status: '200 OK — REMEDIATION EXECUTED',
+        blocked: False,
+        reason: 'ArmorIQ authorized restart on production cluster post-approval.',
+      });
+    });
+
+    btnDeny?.addEventListener('click', async () => {
+      btnApprove.disabled = true;
+      btnDeny.disabled = true;
+      btnDeny.textContent = 'Rejecting...';
+
+      const email = emailInput?.value.trim() || 'sre-operator@finsecure.com';
+      const result = await apiPost('/api/approve', {
+        hold_id: hold.hold_id,
+        decision: 'deny',
+        approver_email: email,
+      });
+
+      panelEl.style.opacity = '0.6';
+      panelEl.style.pointerEvents = 'none';
+
+      await appendStep({
+        agent: 'Human SRE Operator',
+        role: 'commander',
+        narration: `Operator (${email}) REJECTED delegation #${(hold.delegation_id || '').slice(0, 8)}. Action revoked.`,
+        delay: 150,
+      });
+
+      await appendStep({
+        agent: 'ArmorIQ Policy Evaluator',
+        role: 'gateway',
+        narration: 'Delegation rejected. Production restart aborted. Environment remains in current state.',
+        delay: 200,
+      });
+
+      showVerdict(result?.policy || {
+        status: 'DENIED BY OPERATOR',
+        blocked: true,
+        reason: 'Delegation rejected by operator. Production restart cancelled.',
+      });
+    });
+  }
+
   // ========= Full Security Matrix =========
   async function runSecurityMatrix() {
     clearFeed();
@@ -1650,10 +2187,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Instant auto-run on page load
+  // Initial load
+  fetchEnvironmentState();
   runScenario('prompt-injection');
 });
-
-</script>
+  </script>
 </body>
 </html>

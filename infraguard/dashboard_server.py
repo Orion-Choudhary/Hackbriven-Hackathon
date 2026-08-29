@@ -108,6 +108,7 @@ def _nemotron_reason(prompt: str, system_context: str = "") -> dict:
         {"role": "user", "content": prompt},
     ]
 
+    t0 = time.time()
     provider, api_key = _get_api_key()
     model_used = "nvidia/nemotron-3.5-lightning:free"
     reasoning = ""
@@ -115,13 +116,14 @@ def _nemotron_reason(prompt: str, system_context: str = "") -> dict:
     decided_action = ""
     decided_params = {}
     raw_response = ""
-    latency = 0.0
+    genuine = False
 
     if provider != "none":
         try:
             res, model_used, latency = _call_openai_compatible(messages)
             raw_response = res["choices"][0]["message"]["content"]
             reasoning = raw_response
+            genuine = True
 
             parsed = _extract_json(raw_response)
             if parsed:
@@ -129,7 +131,8 @@ def _nemotron_reason(prompt: str, system_context: str = "") -> dict:
                 decided_action = parsed.get("action", "")
                 decided_params = parsed.get("params", {})
         except Exception as exc:
-            # Fallback: Parse prompt intent to formulate autonomous SRE reasoning
+            # Live LLM call failed. Do NOT fabricate a response that masquerades
+            # as the model — record this honestly as a local, non-genuine fallback.
             prompt_lower = prompt.lower()
             if "restart" in prompt_lower or "remediation" in prompt_lower or "deadlock" in prompt_lower or "buffer" in prompt_lower or "override" in prompt_lower:
                 decided_mcp = "remediation_mcp"
@@ -157,18 +160,23 @@ def _nemotron_reason(prompt: str, system_context: str = "") -> dict:
                     "to fetch container logs and query latency metrics."
                 )
             raw_response = reasoning
-            model_used = "nvidia/nemotron-3.5-lightning:free (autonomous reasoning)"
-            latency = 0.45
+            model_used = f"SIMULATED (live LLM call failed: {exc})"
+            genuine = False
     else:
         reasoning = (
             "No API key configured. In a live demo, Nemotron would analyze "
             "this prompt and return its autonomous reasoning here."
         )
         raw_response = reasoning
+        model_used = "SIMULATED (no LLM API key configured)"
+        genuine = False
+
+    latency = round(time.time() - t0, 2)
 
     return {
         "model": model_used,
-        "latency_seconds": round(latency, 2),
+        "latency_seconds": latency,
+        "genuine": genuine,
         "reasoning": reasoning,
         "raw_response": raw_response,
         "decided_mcp": decided_mcp,

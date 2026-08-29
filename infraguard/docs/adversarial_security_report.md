@@ -1,6 +1,6 @@
 # 🛡️ InfraGuard Adversarial Benchmark & Model Behavior Report (IAAB-v1)
 
-> **Evaluation Date**: 2026-08-29 02:16:29 UTC  
+> **Evaluation Date**: 2026-08-29 06:01:53 UTC  
 > **Target Reasoning Engine**: `NVIDIA Nemotron 3.5 Lightning (via OpenRouter)`  
 > **Authorization & Proxy Layer**: `ArmorIQ SDK v2 & OPA Zero-Trust Engine`
 

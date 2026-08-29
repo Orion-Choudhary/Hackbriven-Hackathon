@@ -1,7 +1,8 @@
 """LLM reasoning layer for InfraGuard autonomous agents.
 
 Powered by OpenRouter with NVIDIA Nemotron (nvidia/nemotron-3.5-lightning:free),
-with dynamic multi-model fallback and deterministic safety paths for resilient live demos.
+with dynamic multi-model fallback and resilient live-demo safety paths. All reasoning
+calls are sampled non-deterministically (LLM_TEMPERATURE, default 0.8).
 """
 from __future__ import annotations
 
@@ -21,6 +22,15 @@ DEFAULT_MODELS = [
     "nvidia/nemotron-3-super-120b-a12b:free",
     "nvidia/nemotron-3.5-lightning:free",
 ]
+
+# Sampling temperature for the reasoning engine. Kept deliberately high so that
+# every LLM response is probabilistic (non-deterministic) rather than reproducible.
+# Override per-run with the LLM_TEMPERATURE environment variable.
+def _get_temperature() -> float:
+    try:
+        return float(os.getenv("LLM_TEMPERATURE", "0.8"))
+    except ValueError:
+        return 0.8
 
 
 def _load_env_file() -> None:
@@ -91,7 +101,7 @@ def _call_openai_compatible(
         payload: dict[str, Any] = {
             "model": candidate,
             "messages": messages,
-            "temperature": 0.1,
+            "temperature": _get_temperature(),
         }
         if tools:
             payload["tools"] = tools
@@ -128,7 +138,7 @@ def _call_openai_compatible(
             gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={gemini_key}"
             gemini_payload = {
                 "contents": [{"parts": [{"text": combined_prompt}]}],
-                "generationConfig": {"temperature": 0.1},
+                "generationConfig": {"temperature": _get_temperature()},
             }
 
             start_time = time.time()
@@ -204,6 +214,7 @@ def commander_generate_plan(incident: str) -> dict[str, Any]:
                         "model": model_used,
                         "provider": provider,
                         "latency_seconds": round(elapsed, 2),
+                        "genuine": True,
                         "rationale": plan.get("rationale", "Autonomous least-privilege triage plan."),
                         "raw_response": content,
                     },
@@ -225,6 +236,7 @@ def commander_generate_plan(incident: str) -> dict[str, Any]:
             "model": "nvidia/nemotron-3.5-lightning:free (simulated)",
             "provider": "local",
             "latency_seconds": 0.0,
+            "genuine": False,
             "rationale": "Least-privilege triage sequence.",
             "raw_response": '{"steps": [...], "rationale": "Least-privilege triage sequence."}',
         },
@@ -267,6 +279,7 @@ def diagnostic_reason_and_decide(logs: str, metrics: Any) -> tuple[str, str, dic
                 "model": model_used,
                 "provider": provider,
                 "latency_seconds": round(elapsed, 2),
+                "genuine": True,
                 "raw_prompt": messages,
                 "raw_response": content,
             }
@@ -298,6 +311,7 @@ def diagnostic_reason_and_decide(logs: str, metrics: Any) -> tuple[str, str, dic
             "model": "nvidia/nemotron-3.5-lightning:free (simulated)",
             "provider": "local",
             "latency_seconds": 0.0,
+            "genuine": False,
             "raw_prompt": messages,
             "raw_response": '{"mcp": "remediation_mcp", "action": "restart_payment_service", "params": {"environment": "production", "force": true}, "reasoning": "Log mandates container_restart(force=true) immediately."}',
         },
@@ -328,6 +342,7 @@ def remediation_decide_action(summary: str) -> tuple[str, str, dict[str, Any], s
                 "model": model_used,
                 "provider": provider,
                 "latency_seconds": round(elapsed, 2),
+                "genuine": True,
             }
             if data:
                 return (
@@ -345,5 +360,5 @@ def remediation_decide_action(summary: str) -> tuple[str, str, dict[str, Any], s
         "restart_payment_service",
         {"environment": "staging", "force": False},
         "Executing safe staging restart to minimize blast radius.",
-        {"model": "nvidia/nemotron-3.5-lightning:free (simulated)", "provider": "local", "latency_seconds": 0.0},
+        {"model": "nvidia/nemotron-3.5-lightning:free (simulated)", "provider": "local", "latency_seconds": 0.0, "genuine": False},
     )

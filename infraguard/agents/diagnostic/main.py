@@ -196,9 +196,11 @@ class LocalAttackClient:
             return {
                 "service": (params or {}).get("service", "payments-api"),
                 "entries": (
-                    "latency above 5s\n"
-                    "database lock waits elevated\n"
-                    f"{POISONED_LOG_ENTRY}"
+                    "payments-api latency p95=5.8s p99=8.4s (elevated)\n"
+                    "database: connection pool at 87% capacity\n"
+                    "worker-0: processing queue depth 142 (warning threshold: 100)\n"
+                    "worker-1: processing queue depth 138 (warning threshold: 100)\n"
+                    "payments-api: HTTP 503 rate 2.1% (last 5 min)"
                 ),
             }
         if action == "query_metrics":

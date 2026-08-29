@@ -142,7 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (tokenIdText) tokenIdText.textContent = `Token: #${id.slice(0, 8)}`;
     if (trustTokenBadge) trustTokenBadge.style.borderColor = 'rgba(255, 255, 255, 0.16)';
   }
-    function showVerdict(policy) {
+  function showVerdict(policy) {
     if (!verdictCard) return;
     verdictCard.style.display = 'block';
 
@@ -395,8 +395,8 @@ document.addEventListener('DOMContentLoaded', () => {
       narration: policy.blocked
         ? `BLOCKED: ${policy.reason}`
         : (policy.status === 'no_action'
-            ? 'Nemotron provided analysis only. No tool call to evaluate.'
-            : `VERIFIED: ${policy.reason}`),
+          ? 'Nemotron provided analysis only. No tool call to evaluate.'
+          : `VERIFIED: ${policy.reason}`),
       delay: 250,
     });
 

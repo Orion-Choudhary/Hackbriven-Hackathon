@@ -109,15 +109,12 @@ def _call_openai_compatible(
 
         try:
             start_time = time.time()
-            with httpx.Client(timeout=6.0) as client:
+            with httpx.Client(timeout=10.0) as client:
                 resp = client.post(f"{base_url}/chat/completions", json=payload, headers=headers)
                 elapsed = time.time() - start_time
                 if resp.status_code == 200:
                     return resp.json(), candidate, elapsed
                 last_error = f"Model {candidate}: status {resp.status_code}"
-                if resp.status_code in (401, 402, 429):
-                    logger.warning("[LLM] OpenRouter rate limit or auth error (%d), breaking to direct Gemini fallback.", resp.status_code)
-                    break
         except Exception as exc:
             last_error = f"Model {candidate}: {exc}"
 
@@ -125,45 +122,40 @@ def _call_openai_compatible(
     _load_env_file()
     gemini_key = os.getenv("GEMINI_API_KEY")
     if gemini_key:
-        gemini_models = ["gemini-3.6-flash", "gemini-3.7-flash", "gemini-2.5-flash-lite"]
-        prompt_parts = []
-        for msg in messages:
-            role = msg.get("role", "user")
-            content = msg.get("content", "")
-            if role == "system":
-                prompt_parts.append(f"System instructions: {content}")
-            else:
-                prompt_parts.append(content)
-        combined_prompt = "\n\n".join(prompt_parts)
+        try:
+            logger.info("[LLM] All OpenRouter models failed. Falling back to Gemini API...")
+            # Convert OpenAI messages to Gemini format
+            prompt_parts = []
+            for msg in messages:
+                role = msg.get("role", "user")
+                content = msg.get("content", "")
+                if role == "system":
+                    prompt_parts.append(f"System instructions: {content}")
+                else:
+                    prompt_parts.append(content)
+            combined_prompt = "\n\n".join(prompt_parts)
 
-        for g_model in gemini_models:
-            try:
-                logger.info("[LLM] Attempting Gemini API fallback with model: %s...", g_model)
-                gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/{g_model}:generateContent?key={gemini_key}"
-                gemini_payload = {
-                    "contents": [{"parts": [{"text": combined_prompt}]}],
-                    "generationConfig": {"temperature": _get_temperature()},
-                }
+            gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={gemini_key}"
+            gemini_payload = {
+                "contents": [{"parts": [{"text": combined_prompt}]}],
+                "generationConfig": {"temperature": _get_temperature()},
+            }
 
-                start_time = time.time()
-                with httpx.Client(timeout=15.0) as client:
-                    resp = client.post(gemini_url, json=gemini_payload)
-                    elapsed = time.time() - start_time
-                    if resp.status_code == 200:
-                        gemini_data = resp.json()
-                        candidate = gemini_data.get("candidates", [{}])[0]
-                        parts = candidate.get("content", {}).get("parts", [])
-                        # Extract the text part (ignoring thought parts if any)
-                        text_pieces = [p["text"] for p in parts if "text" in p]
-                        content = "\n".join(text_pieces) if text_pieces else ""
-                        if content:
-                            return {
-                                "choices": [{"message": {"content": content, "role": "assistant"}}]
-                            }, f"{g_model} (via Gemini API)", elapsed
-                    last_error = f"Gemini API ({g_model}): status {resp.status_code}: {resp.text[:120]}"
-            except Exception as exc:
-                last_error = f"Gemini API ({g_model}): {exc}"
-                logger.warning("[LLM] Gemini fallback model %s failed: %s", g_model, exc)
+            start_time = time.time()
+            with httpx.Client(timeout=15.0) as client:
+                resp = client.post(gemini_url, json=gemini_payload)
+                elapsed = time.time() - start_time
+                if resp.status_code == 200:
+                    gemini_data = resp.json()
+                    content = gemini_data["candidates"][0]["content"]["parts"][0]["text"]
+                    # Wrap in OpenAI-compatible response format
+                    return {
+                        "choices": [{"message": {"content": content, "role": "assistant"}}]
+                    }, "gemini-1.5-flash (via Gemini API)", elapsed
+                last_error = f"Gemini API: status {resp.status_code}: {resp.text[:120]}"
+        except Exception as exc:
+            last_error = f"Gemini API: {exc}"
+            logger.warning("[LLM] Gemini fallback also failed: %s", exc)
 
     raise RuntimeError(f"All models failed. Last error: {last_error}")
 
